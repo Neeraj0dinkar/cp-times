@@ -1,0 +1,16 @@
+{
+  "name": "cp-times-news-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Professional Indian news portal starter for CV News",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

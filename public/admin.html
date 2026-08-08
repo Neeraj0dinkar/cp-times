@@ -1,0 +1,11 @@
+<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CP Times Admin / CMS</title><link rel="stylesheet" href="styles.css"></head><body>
+<header class="masthead"><div class="container mast"><a class="logo" href="/" aria-label="CP Times home"><img src="/cv-news-logo.jpeg" alt="CP Times logo"></a><a class="btn" href="/">View Site</a></div></header>
+<main class="container admin"><div class="section-title"><h2>CP Times CMS</h2><span class="meta">Demo newsroom dashboard</span></div>
+<div class="admin-grid"><section class="panel"><h3>Publish Article</h3><form id="form"><label>Headline</label><input name="title" required><label>Category</label><select name="category"><option>India</option><option>World</option><option>Business</option><option>Technology</option><option>Sports</option><option>Entertainment</option></select><label>Excerpt</label><textarea name="excerpt"></textarea><label>Article Body</label><textarea name="body" required></textarea><label>Author</label><input name="author" value="CP Times Desk"><button class="btn red">Publish</button></form><p class="meta">Production note: add authentication, roles, moderation, image upload, database and audit logging before exposing this dashboard publicly.</p></section>
+<section class="panel"><h3>Published Articles</h3><table class="table"><thead><tr><th>Title</th><th>Category</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></section></div></main>
+<script>
+async function refresh(){const d=await fetch('/api/articles').then(r=>r.json());document.getElementById('rows').innerHTML=d.map(a=>`<tr><td>${a.title}</td><td>${a.category}</td><td><button class="btn" onclick="del('${a.id}')">Delete</button></td></tr>`).join('')}
+async function del(id){if(!confirm('Delete article?'))return;await fetch('/api/admin/articles/'+id,{method:'DELETE'});refresh()}
+document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const body=Object.fromEntries(f.entries());const r=await fetch('/api/admin/articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(r.ok){e.target.reset();refresh()}else alert((await r.json()).error)});
+refresh();
+</script></body></html>
