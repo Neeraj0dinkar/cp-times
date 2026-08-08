@@ -27,5 +27,5 @@ app.get(/^\/(india|maharashtra|pune|world|business|technology|sports|entertainme
 app.get("/category/:category",(q,r)=>r.sendFile(path.join(PUB,"category.html")));
 app.get("/admin",(q,r)=>r.sendFile(path.join(PUB,"admin.html")));
 app.get("/login",(q,r)=>r.sendFile(path.join(PUB,"login.html")));
-app.get("*",(q,r)=>r.sendFile(path.join(PUB,"index.html")));
+app.use((q,r)=>r.sendFile(path.join(PUB,"index.html")));
 app.listen(PORT,"0.0.0.0",()=>console.log(`CP Times production server running on port ${PORT}`));
