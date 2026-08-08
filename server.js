@@ -1,89 +1,31 @@
-const express = require("express");
-const path = require("path");
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-
-let articles = [
-  {
-    id: "cv-launch",
-    title: "CP Times: Fast, factual and fearless news for a new India",
-    slug: "cp-times-fast-factual-and-fearless",
-    category: "India",
-    excerpt: "Welcome to CP Times — a modern digital news destination covering India, world affairs, business, technology, sports and entertainment.",
-    body: "CP Times is built around clear reporting, useful context and a fast digital experience. This launch article is sample content that can be replaced from the admin dashboard or a future CMS.",
-    author: "CP Times Desk",
-    publishedAt: new Date().toISOString(),
-    image: "",
-    featured: true
-  },
-  {
-    id: "india-story",
-    title: "India's biggest stories, explained clearly",
-    slug: "indias-biggest-stories-explained",
-    category: "India",
-    excerpt: "Follow the developments shaping cities, communities, policy and public life.",
-    body: "This is placeholder article content. Connect your newsroom workflow or CMS to publish real reporting.",
-    author: "CP Times Desk",
-    publishedAt: new Date().toISOString(),
-    image: "",
-    featured: false
-  },
-  {
-    id: "tech-story",
-    title: "AI and technology trends to watch",
-    slug: "ai-and-technology-trends-to-watch",
-    category: "Technology",
-    excerpt: "From artificial intelligence to digital products, technology is changing everyday life.",
-    body: "This is placeholder article content for the Technology category.",
-    author: "CP Times Tech Desk",
-    publishedAt: new Date().toISOString(),
-    image: "",
-    featured: false
-  }
-];
-
-app.get("/api/articles", (req, res) => {
-  const category = req.query.category;
-  const q = (req.query.q || "").toLowerCase();
-  let result = articles;
-  if (category) result = result.filter(a => a.category.toLowerCase() === category.toLowerCase());
-  if (q) result = result.filter(a => `${a.title} ${a.excerpt} ${a.body}`.toLowerCase().includes(q));
-  res.json(result.sort((a,b) => new Date(b.publishedAt) - new Date(a.publishedAt)));
-});
-
-app.get("/api/articles/:slug", (req, res) => {
-  const article = articles.find(a => a.slug === req.params.slug);
-  if (!article) return res.status(404).json({error:"Article not found"});
-  res.json(article);
-});
-
-// Demo CMS endpoints. Protect these with authentication before production use.
-app.post("/api/admin/articles", (req, res) => {
-  const {title, category, excerpt, body, author="CP Times Desk", image="", featured=false} = req.body;
-  if (!title || !category || !body) return res.status(400).json({error:"title, category and body are required"});
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  const article = {id: String(Date.now()), title, slug, category, excerpt, body, author, image, featured, publishedAt:new Date().toISOString()};
-  articles.unshift(article);
-  res.status(201).json(article);
-});
-
-app.delete("/api/admin/articles/:id", (req,res) => {
-  const before = articles.length;
-  articles = articles.filter(a => a.id !== req.params.id);
-  if (articles.length === before) return res.status(404).json({error:"Article not found"});
-  res.json({ok:true});
-});
-
-app.get("/sitemap.xml", (req,res) => {
-  const base = `${req.protocol}://${req.get("host")}`;
-  const urls = ["", "/article.html?slug=cp-times-fast-factual-and-fearless", "/category.html?name=India", "/category.html?name=World", "/category.html?name=Business", "/category.html?name=Technology", "/category.html?name=Sports", "/category.html?name=Entertainment"];
-  res.type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(u=>`<url><loc>${base}${u}</loc></url>`).join("")}</urlset>`);
-});
-
-app.get("/{*splat}", (req,res) => res.sendFile(path.join(__dirname, "public", "index.html")));
-
-app.listen(PORT, "0.0.0.0", () => console.log(`CP Times running on port ${PORT}`));
+const express=require("express");
+const path=require("path");
+const helmet=require("helmet");
+const compression=require("compression");
+const rateLimit=require("express-rate-limit");
+const {createClient}=require("@supabase/supabase-js");
+const app=express();
+const PORT=process.env.PORT||10000;
+const URL=process.env.SUPABASE_URL, KEY=process.env.SUPABASE_ANON_KEY;
+const SITE=process.env.SITE_URL||"https://cptimes.in";
+const sb=(URL&&KEY)?createClient(URL,KEY,{auth:{persistSession:false}}):null;
+app.use(helmet({contentSecurityPolicy:false}));
+app.use(compression()); app.use(express.json({limit:"2mb"}));
+app.use(rateLimit({windowMs:60000,limit:120}));
+const PUB=path.join(__dirname,"public"); app.use(express.static(PUB,{maxAge:"1h"}));
+const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const bodyHtml=x=>String(x||"").split(/\n{2,}/).map(p=>`<p>${esc(p).replace(/\n/g,"<br>")}</p>`).join("");
+async function published(slug){if(!sb)return null;const {data}=await sb.from("articles").select("*").eq("slug",slug).eq("status","published").maybeSingle();return data||null}
+app.get("/api/config",(q,r)=>r.json({supabaseUrl:URL||"",supabaseAnonKey:KEY||"",siteUrl:SITE}));
+app.get("/api/health",(q,r)=>r.json({ok:true}));
+app.get("/api/articles",async(q,r)=>{if(!sb)return r.status(503).json({error:"Supabase not configured"});let x=sb.from("articles").select("id,title,slug,category,excerpt,image_url,author_name,published_at,featured").eq("status","published").order("published_at",{ascending:false}).limit(Math.min(Number(q.query.limit)||12,50));if(q.query.category)x=x.eq("category",q.query.category);const {data,error}=await x;if(error)return r.status(500).json({error:error.message});r.json(data||[])});
+app.get("/api/articles/:slug",async(q,r)=>{const a=await published(q.params.slug);if(!a)return r.status(404).json({error:"Not found"});r.json(a)});
+app.get("/api/breaking",async(q,r)=>{if(!sb)return r.status(503).json({error:"Supabase not configured"});const {data,error}=await sb.from("breaking_news").select("*").eq("active",true).order("priority",{ascending:false}).order("created_at",{ascending:false}).limit(10);if(error)return r.status(500).json({error:error.message});r.json(data||[])});
+app.get("/api/settings",async(q,r)=>{if(!sb)return r.status(503).json({error:"Supabase not configured"});const {data,error}=await sb.from("site_settings").select("key,value");if(error)return r.status(500).json({error:error.message});const o={};(data||[]).forEach(x=>o[x.key]=x.value);r.json(o)});
+app.get("/sitemap.xml",async(q,r)=>{let u=[SITE+"/",...["india","maharashtra","pune","world","business","technology","sports","entertainment"].map(x=>SITE+"/category/"+x)];if(sb){const {data}=await sb.from("articles").select("slug,category").eq("status","published").limit(5000);(data||[]).forEach(a=>u.push(`${SITE}/${encodeURIComponent(a.category.toLowerCase())}/${encodeURIComponent(a.slug)}`))}r.type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${u.map(x=>`<url><loc>${esc(x)}</loc></url>`).join("")}</urlset>`)});
+app.get(/^\/(india|maharashtra|pune|world|business|technology|sports|entertainment|politics)\/([^/]+)$/,async(q,r)=>{const a=await published(q.params[2]);if(!a)return r.status(404).send("<h1>Article not found</h1>");const canonical=`${SITE}/${a.category.toLowerCase()}/${a.slug}`;const ld={"@context":"https://schema.org","@type":"NewsArticle","headline":a.title,"description":a.excerpt||a.title,"datePublished":a.published_at,"dateModified":a.updated_at||a.published_at,"author":{"@type":"Person","name":a.author_name||"CP Times Desk"},"publisher":{"@type":"Organization","name":"CP Times","url":SITE}};r.send(`<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(a.title)} | CP Times</title><meta name="description" content="${esc(a.excerpt||a.title)}"><link rel="canonical" href="${esc(canonical)}"><meta property="og:title" content="${esc(a.title)}"><meta property="og:description" content="${esc(a.excerpt||a.title)}">${a.image_url?`<meta property="og:image" content="${esc(a.image_url)}">`:""}<link rel="stylesheet" href="/styles.css"><script type="application/ld+json">${JSON.stringify(ld).replace(/</g,"\\u003c")}</script></head><body><header class="mast"><a href="/"><img src="/cv-news-logo.jpeg" alt="CP Times"></a><a href="/">Home</a></header><main class="article"><span class="tag">${esc(a.category)}</span><h1>${esc(a.title)}</h1><p class="lead">${esc(a.excerpt||"")}</p><div class="meta">By ${esc(a.author_name||"CP Times Desk")} • ${new Date(a.published_at).toLocaleString("en-IN")}</div>${a.image_url?`<img class="article-image" src="${esc(a.image_url)}" alt="${esc(a.title)}">`:""}<div class="article-body">${bodyHtml(a.body)}</div></main></body></html>`)});
+app.get("/category/:category",(q,r)=>r.sendFile(path.join(PUB,"category.html")));
+app.get("/admin",(q,r)=>r.sendFile(path.join(PUB,"admin.html")));
+app.get("/login",(q,r)=>r.sendFile(path.join(PUB,"login.html")));
+app.get("*",(q,r)=>r.sendFile(path.join(PUB,"index.html")));
+app.listen(PORT,"0.0.0.0",()=>console.log(`CP Times production server running on port ${PORT}`));

@@ -1,19 +1,17 @@
-# CP Times — Production Deployment Package
+# CP Times v2 — Real News Portal
 
-This package is prepared for deployment as a Node.js/Express web service.
+This version adds Supabase Postgres database, Supabase Auth, Storage for article images, RLS authorization, secure newsroom login, article workflow, breaking news, YouTube settings, ads settings, sitemap and SEO-friendly article URLs.
 
-## Recommended beginner deployment
-1. Create a GitHub account.
-2. Create a new repository named `cp-times`.
-3. Upload the contents of this folder to the repository (not the ZIP file itself).
-4. Create a Render Web Service and connect the GitHub repository.
-5. Build command: `npm install`
-6. Start command: `npm start`
-7. After the Render URL works, add `cptimes.in` as a Custom Domain in Render.
-8. Update DNS at the domain registrar using the exact records Render displays.
-9. Render automatically manages TLS/HTTPS for the custom domain.
+## Setup order
+1. Create a Supabase project.
+2. Open Supabase SQL Editor and run `supabase-schema.sql`.
+3. In Supabase Authentication > Users, create the first user with email/password.
+4. Copy the user's UUID and run:
+   `insert into public.profiles(id,full_name,role) values ('USER_UUID','CP Times Admin','admin');`
+5. Copy your Supabase Project URL and publishable/anon key.
+6. In Render > cp-times > Environment, add:
+   `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL=https://cptimes.in`
+7. Push this package to the GitHub `cp-times` repository. Render will deploy automatically.
+8. Open `https://cptimes.in/login` to enter the newsroom.
 
-## Important
-- Do NOT publish passwords, API keys, database credentials, or `.env` files to GitHub.
-- The current CMS is a demo and should not be publicly exposed without authentication.
-- The current article data is in memory; a production newsroom needs a database.
+Never put a Supabase service-role key in GitHub or browser code. The publishable/anon key is protected by the RLS policies in the SQL schema.
