@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: http://cptimes.in/sitemap.xml
+Sitemap: https://cptimes.in/sitemap.xml
