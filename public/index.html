@@ -219,6 +219,50 @@ main.container{
   .login-link{font-size:13px !important}
 }
 
+
+/* ===== CP TIMES WEATHER CARD ===== */
+.weather-card{padding-bottom:12px}
+.weather-city{
+  border:1px solid #e2e5e9;
+  background:#fff;
+  border-radius:5px;
+  padding:4px 7px;
+  font-size:11px;
+  color:#374151;
+  max-width:105px;
+  outline:none;
+}
+.weather-city:focus{border-color:var(--red)}
+.weather-box{padding:10px 14px 2px}
+.weather-main{display:flex;align-items:center;gap:12px}
+.weather-icon{
+  width:48px;height:48px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#fff7d6,#ffe7a0);
+  font-size:27px;
+  flex:none;
+}
+.weather-temp{font-size:29px;font-weight:900;line-height:1}
+.weather-condition{font-size:11px;color:#6b7280;margin-top:4px}
+.weather-place{font-size:12px;font-weight:900;color:#111827}
+.weather-details{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:7px;margin-top:12px
+}
+.weather-stat{
+  background:#f8f9fa;border:1px solid #eceef0;border-radius:6px;
+  padding:7px 6px;text-align:center
+}
+.weather-stat strong{display:block;font-size:11px;color:#111827}
+.weather-stat span{display:block;font-size:9px;color:#737983;margin-top:2px}
+.weather-updated{font-size:9px;color:#9ca3af;margin-top:9px}
+.weather-error{font-size:11px;color:#6b7280;line-height:1.45;padding:4px 0}
+.weather-retry{border:0;background:none;color:var(--red);font-weight:800;cursor:pointer;padding:0;font-size:11px}
+@media(max-width:700px){
+  .weather-details{grid-template-columns:repeat(3,1fr)}
+  .weather-city{max-width:110px}
+}
+
 </style>
 </head>
 <body>
@@ -248,6 +292,23 @@ main.container{
     </section>
 
     <aside class="right-rail">
+
+      <section class="rail-card weather-card">
+        <div class="rail-head">
+          <div><span class="rail-icon">☀</span><span>WEATHER</span></div>
+          <select id="weatherCity" class="weather-city" aria-label="Select city">
+            <option value="26.8467,80.9462">Lucknow</option>
+            <option value="28.6139,77.2090">New Delhi</option>
+            <option value="25.3176,82.9739">Varanasi</option>
+            <option value="27.1767,78.0081">Agra</option>
+            <option value="26.4499,80.3319">Kanpur</option>
+          </select>
+        </div>
+        <div id="weatherBox" class="weather-box">
+          <div class="weather-loading">Loading weather...</div>
+        </div>
+      </section>
+
       <section class="rail-card fun-card">
         <div class="rail-head">
           <div><span class="rail-icon">★</span><span>CV FUN FACTS</span></div>
@@ -288,6 +349,83 @@ main.container{
 
 <script>
 const e=x=>String(x||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const categorySlug=x=>String(x||"").trim().toLowerCase().replace(/\s+/g,"-");let facts=[],factIndex=0;const zodiacOrder=["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];const zodiacIcons={Aries:"♈",Taurus:"♉",Gemini:"♊",Cancer:"♋",Leo:"♌",Virgo:"♍",Libra:"♎",Scorpio:"♏",Sagittarius:"♐",Capricorn:"♑",Aquarius:"♒",Pisces:"♓"};async function go(){let [a,b,s,f,h]=await Promise.all([fetch("/api/articles?limit=12").then(r=>r.json()),fetch("/api/breaking").then(r=>r.json()),fetch("/api/settings").then(r=>r.json()),fetch("/api/fun-facts?limit=8&language=English").then(r=>r.json()),fetch(`/api/horoscope?month=${new Date().toISOString().slice(0,7)}`).then(r=>r.json())]);if(b[0])document.getElementById("b").textContent=b[0].headline;document.getElementById("list").innerHTML=(a||[]).map(x=>`<article class="card"><a href="/${categorySlug(x.category)}/${encodeURIComponent(x.slug)}"><img class="thumb" src="${x.image_url||"/fallback-news.svg"}" alt=""></a><span class="tag">${e(x.category)}</span><h3><a href="/${categorySlug(x.category)}/${encodeURIComponent(x.slug)}">${e(x.title)}</a></h3><p>${e(x.excerpt||"")}</p><span class="meta">${e(x.author_name||"CP Times Desk")} • ${new Date(x.published_at).toLocaleString("en-IN")}</span></article>`).join("")||"<p>No published stories yet.</p>";if(a[0]){document.getElementById("hero").style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.9),transparent),url("${a[0].image_url||"/fallback-news.svg"}")`;document.getElementById("hero").querySelector("h1").textContent=a[0].title;document.getElementById("hero").onclick=()=>location.href=`/${categorySlug(a[0].category)}/${encodeURIComponent(a[0].slug)}`;document.getElementById("hero").style.cursor="pointer"}if(s.youtube_featured_video)document.getElementById("yt").innerHTML=`<iframe width="100%" height="220" src="https://www.youtube.com/embed/${encodeURIComponent(s.youtube_featured_video)}" frameborder="0" allowfullscreen></iframe>`;facts=Array.isArray(f)?f:[];renderFact();renderHoroscope(Array.isArray(h)?h:[]);document.getElementById("nextFact").onclick=()=>{if(facts.length){factIndex=(factIndex+1)%facts.length;renderFact()}}}function renderFact(){let box=document.getElementById("funFacts");if(!facts.length){box.innerHTML="<p>No fun facts published yet.</p>";document.getElementById("nextFact").style.display="none";return}let x=facts[factIndex];box.innerHTML=`<div class="fact-category">${e(x.category)}</div><h3>${e(x.title)}</h3><p class="fact-text">${e(x.fact)}</p>${x.source?`<div class="fact-source">Source: ${e(x.source)}</div>`:""}`;const d=document.getElementById("factDots");if(d)d.innerHTML=facts.slice(0,8).map((_,i)=>`<button class="fact-dot ${i===factIndex?"active":""}" aria-label="Fact ${i+1}"></button>`).join("");if(d)d.querySelectorAll(".fact-dot").forEach((b,i)=>b.onclick=()=>{factIndex=i;renderFact()})}function renderHoroscope(rows){let monthName=new Date().toLocaleString("en-IN",{month:"long",year:"numeric"});document.getElementById("horoscopeMonthTitle").textContent=monthName;if(!rows.length){document.getElementById("horoscope").innerHTML="<p>No horoscope published for this month yet.</p>";return}let bySign={};rows.forEach(x=>bySign[x.sign]=x);document.getElementById("horoscope").innerHTML=zodiacOrder.filter(s=>bySign[s]).map(sign=>`<div class="zodiac"><div class="zodiac-head"><span>${zodiacIcons[sign]} ${sign}</span></div><p>${e(bySign[sign].content)}</p></div>`).join("")}go();
+
+// ===== CP TIMES WEATHER =====
+const weatherCities = {
+  "26.8467,80.9462": "Lucknow",
+  "28.6139,77.2090": "New Delhi",
+  "25.3176,82.9739": "Varanasi",
+  "27.1767,78.0081": "Agra",
+  "26.4499,80.3319": "Kanpur"
+};
+
+function weatherIcon(code){
+  if(code===0) return "☀️";
+  if([1,2].includes(code)) return "🌤️";
+  if(code===3) return "☁️";
+  if([45,48].includes(code)) return "🌫️";
+  if([51,53,55,56,57].includes(code)) return "🌦️";
+  if([61,63,65,66,67,80,81,82].includes(code)) return "🌧️";
+  if([71,73,75,77,85,86].includes(code)) return "❄️";
+  if([95,96,99].includes(code)) return "⛈️";
+  return "🌤️";
+}
+
+function weatherText(code){
+  const m={
+    0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",
+    45:"Foggy",48:"Foggy",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",
+    56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",
+    66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",
+    77:"Snow grains",80:"Rain showers",81:"Rain showers",82:"Heavy showers",
+    85:"Snow showers",86:"Snow showers",95:"Thunderstorm",96:"Thunderstorm",99:"Thunderstorm"
+  };
+  return m[code] || "Current conditions";
+}
+
+async function loadWeather(){
+  const box=document.getElementById("weatherBox");
+  const selector=document.getElementById("weatherCity");
+  if(!box || !selector) return;
+
+  const [lat,lon]=selector.value.split(",");
+  const place=weatherCities[selector.value] || "Lucknow";
+
+  box.innerHTML='<div class="weather-loading">Updating weather...</div>';
+
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+    const res=await fetch(url);
+    if(!res.ok) throw new Error("Weather request failed");
+    const data=await res.json();
+    const c=data.current;
+    const d=data.daily;
+
+    box.innerHTML=`
+      <div class="weather-main">
+        <div class="weather-icon">${weatherIcon(c.weather_code)}</div>
+        <div>
+          <div class="weather-place">${place}</div>
+          <div class="weather-temp">${Math.round(c.temperature_2m)}°C</div>
+          <div class="weather-condition">${weatherText(c.weather_code)} · Feels ${Math.round(c.apparent_temperature)}°</div>
+        </div>
+      </div>
+      <div class="weather-details">
+        <div class="weather-stat"><strong>${Math.round(d.temperature_2m_max[0])}° / ${Math.round(d.temperature_2m_min[0])}°</strong><span>High / Low</span></div>
+        <div class="weather-stat"><strong>${Math.round(c.relative_humidity_2m)}%</strong><span>Humidity</span></div>
+        <div class="weather-stat"><strong>${Math.round(c.wind_speed_10m)} km/h</strong><span>Wind</span></div>
+      </div>
+      <div class="weather-updated">Live conditions · ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</div>
+    `;
+  }catch(err){
+    box.innerHTML=`<div class="weather-error">Weather is temporarily unavailable.<br><button class="weather-retry" onclick="loadWeather()">Try again →</button></div>`;
+  }
+}
+
+document.getElementById("weatherCity")?.addEventListener("change",loadWeather);
+loadWeather();
+setInterval(loadWeather, 15*60*1000);
+
 </script>
 </body>
 </html>
