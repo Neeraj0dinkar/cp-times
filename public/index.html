@@ -15,69 +15,66 @@
 </header>
 
 <nav class="nav">
-  <a href="/">HOME</a>
-  <a href="/category/india">INDIA</a>
-  <a href="/category/uttar-pradesh">UTTAR PRADESH</a>
-  <a href="/category/world">WORLD</a>
-  <a href="/category/business">BUSINESS</a>
-  <a href="/category/technology">TECHNOLOGY</a>
-  <a href="/category/sports">SPORTS</a>
-  <a href="/category/entertainment">ENTERTAINMENT</a>
-  <a href="/category/politics">POLITICS</a>
+  <a href="/">HOME</a><a href="/category/india">INDIA</a><a href="/category/uttar-pradesh">UTTAR PRADESH</a>
+  <a href="/category/world">WORLD</a><a href="/category/business">BUSINESS</a><a href="/category/technology">TECHNOLOGY</a>
+  <a href="/category/sports">SPORTS</a><a href="/category/entertainment">ENTERTAINMENT</a><a href="/category/politics">POLITICS</a>
 </nav>
 
-<div class="breaking">
-  <div class="container breaking-inner">
-    <strong>BREAKING</strong>
-    <span id="b">Loading...</span>
-  </div>
-</div>
+<div class="breaking"><div class="container breaking-inner"><strong>BREAKING</strong><span id="b">Loading...</span></div></div>
 
 <main class="container">
-  <div class="top-grid">
+  <section class="top-grid">
     <section id="hero" class="hero">
+      <div class="hero-overlay"></div>
       <div class="hero-content">
         <span class="tag">TOP STORY</span>
         <h1>CP Times — your digital newsroom</h1>
         <p>India, Uttar Pradesh, world, business, technology, sports and entertainment.</p>
+        <span class="read-story">Read full story →</span>
       </div>
     </section>
 
-    <aside class="top-sidebar">
-      <section class="sidebar-card funfacts-box">
-        <div class="sidebar-title"><span>⭐</span> CV FUN FACTS</div>
-        <div id="funFacts"><p class="sidebar-loading">Loading facts...</p></div>
-        <button id="nextFact" class="fact-next">Next Fact →</button>
+    <aside class="right-rail">
+      <section class="rail-card fun-card">
+        <div class="rail-head">
+          <div><span class="rail-icon">★</span><span>CV FUN FACTS</span></div>
+          <span class="rail-label">DID YOU KNOW?</span>
+        </div>
+        <div class="fact-wrap">
+          <div id="funFacts"><p class="sidebar-loading">Loading facts...</p></div>
+        </div>
+        <div class="fact-controls">
+          <div id="factDots" class="fact-dots"></div>
+          <button id="nextFact" class="icon-next" aria-label="Next fact">→</button>
+        </div>
       </section>
 
-      <section class="sidebar-card horoscope-box">
-        <div class="sidebar-title"><span>🔮</span> MONTHLY HOROSCOPE</div>
-        <div id="horoscopeMonthTitle" class="horoscope-month"></div>
+      <section class="rail-card horoscope-card">
+        <div class="rail-head">
+          <div><span class="rail-icon">✦</span><span>MONTHLY HOROSCOPE</span></div>
+          <span id="horoscopeMonthTitle" class="rail-label"></span>
+        </div>
         <div id="horoscope" class="horoscope-list">
           <p class="sidebar-loading">Loading horoscope...</p>
         </div>
-        <p class="horoscope-note">Entertainment feature only. Not a scientific prediction.</p>
+        <p class="horoscope-note">Entertainment feature • Not a scientific prediction</p>
       </section>
     </aside>
-  </div>
+  </section>
 
   <section class="latest-section">
-    <div class="section-heading">
-      <h2>Latest News</h2>
-      <span>Latest stories from CP Times</span>
-    </div>
+    <div class="section-heading"><h2>Latest News</h2><span>Latest stories from CP Times</span></div>
     <div id="list" class="news-list"></div>
   </section>
 
   <section class="bottom-promo">
     <div class="ad">ADVERTISEMENT</div>
-    <div>
-      <h2>CP Times on YouTube</h2>
-      <div id="yt"></div>
-    </div>
+    <div><h2>CP Times on YouTube</h2><div id="yt"></div></div>
   </section>
 </main>
 
-<script>const e=x=>String(x||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const categorySlug=x=>String(x||"").trim().toLowerCase().replace(/\s+/g,"-");let facts=[],factIndex=0;const zodiacOrder=["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];const zodiacIcons={Aries:"♈",Taurus:"♉",Gemini:"♊",Cancer:"♋",Leo:"♌",Virgo:"♍",Libra:"♎",Scorpio:"♏",Sagittarius:"♐",Capricorn:"♑",Aquarius:"♒",Pisces:"♓"};async function go(){let [a,b,s,f,h]=await Promise.all([fetch("/api/articles?limit=12").then(r=>r.json()),fetch("/api/breaking").then(r=>r.json()),fetch("/api/settings").then(r=>r.json()),fetch("/api/fun-facts?limit=8&language=English").then(r=>r.json()),fetch(`/api/horoscope?month=${new Date().toISOString().slice(0,7)}`).then(r=>r.json())]);if(b[0])document.getElementById("b").textContent=b[0].headline;document.getElementById("list").innerHTML=(a||[]).map(x=>`<article class="card"><a href="/${categorySlug(x.category)}/${encodeURIComponent(x.slug)}"><img class="thumb" src="${x.image_url||"/fallback-news.svg"}" alt=""></a><span class="tag">${e(x.category)}</span><h3><a href="/${categorySlug(x.category)}/${encodeURIComponent(x.slug)}">${e(x.title)}</a></h3><p>${e(x.excerpt||"")}</p><span class="meta">${e(x.author_name||"CP Times Desk")} • ${new Date(x.published_at).toLocaleString("en-IN")}</span></article>`).join("")||"<p>No published stories yet.</p>";if(a[0]){document.getElementById("hero").style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.9),transparent),url("${a[0].image_url||"/fallback-news.svg"}")`;document.getElementById("hero").querySelector("h1").textContent=a[0].title;document.getElementById("hero").onclick=()=>location.href=`/${categorySlug(a[0].category)}/${encodeURIComponent(a[0].slug)}`;document.getElementById("hero").style.cursor="pointer"}if(s.youtube_featured_video)document.getElementById("yt").innerHTML=`<iframe width="100%" height="220" src="https://www.youtube.com/embed/${encodeURIComponent(s.youtube_featured_video)}" frameborder="0" allowfullscreen></iframe>`;facts=Array.isArray(f)?f:[];renderFact();renderHoroscope(Array.isArray(h)?h:[]);document.getElementById("nextFact").onclick=()=>{if(facts.length){factIndex=(factIndex+1)%facts.length;renderFact()}}}function renderFact(){let box=document.getElementById("funFacts");if(!facts.length){box.innerHTML="<p>No fun facts published yet.</p>";document.getElementById("nextFact").style.display="none";return}let x=facts[factIndex];box.innerHTML=`<div class="fact-category">${e(x.category)}</div><h3>${e(x.title)}</h3><p class="fact-text">${e(x.fact)}</p>${x.source?`<div class="fact-source">Source: ${e(x.source)}</div>`:""}`}function renderHoroscope(rows){let monthName=new Date().toLocaleString("en-IN",{month:"long",year:"numeric"});document.getElementById("horoscopeMonthTitle").textContent=monthName;if(!rows.length){document.getElementById("horoscope").innerHTML="<p>No horoscope published for this month yet.</p>";return}let bySign={};rows.forEach(x=>bySign[x.sign]=x);document.getElementById("horoscope").innerHTML=zodiacOrder.filter(s=>bySign[s]).map(sign=>`<div class="zodiac"><div class="zodiac-head"><span>${zodiacIcons[sign]} ${sign}</span></div><p>${e(bySign[sign].content)}</p></div>`).join("")}go();</script>
+<script>
+const e=x=>String(x||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const categorySlug=x=>String(x||"").trim().toLowerCase().replace(/\s+/g,"-");let facts=[],factIndex=0;const zodiacOrder=["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];const zodiacIcons={Aries:"♈",Taurus:"♉",Gemini:"♊",Cancer:"♋",Leo:"♌",Virgo:"♍",Libra:"♎",Scorpio:"♏",Sagittarius:"♐",Capricorn:"♑",Aquarius:"♒",Pisces:"♓"};async function go(){let [a,b,s,f,h]=await Promise.all([fetch("/api/articles?limit=12").then(r=>r.json()),fetch("/api/breaking").then(r=>r.json()),fetch("/api/settings").then(r=>r.json()),fetch("/api/fun-facts?limit=8&language=English").then(r=>r.json()),fetch(`/api/horoscope?month=${new Date().toISOString().slice(0,7)}`).then(r=>r.json())]);if(b[0])document.getElementById("b").textContent=b[0].headline;document.getElementById("list").innerHTML=(a||[]).map(x=>`<article class="card"><a href="/${categorySlug(x.category)}/${encodeURIComponent(x.slug)}"><img class="thumb" src="${x.image_url||"/fallback-news.svg"}" alt=""></a><span class="tag">${e(x.category)}</span><h3><a href="/${categorySlug(x.category)}/${encodeURIComponent(x.slug)}">${e(x.title)}</a></h3><p>${e(x.excerpt||"")}</p><span class="meta">${e(x.author_name||"CP Times Desk")} • ${new Date(x.published_at).toLocaleString("en-IN")}</span></article>`).join("")||"<p>No published stories yet.</p>";if(a[0]){document.getElementById("hero").style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.9),transparent),url("${a[0].image_url||"/fallback-news.svg"}")`;document.getElementById("hero").querySelector("h1").textContent=a[0].title;document.getElementById("hero").onclick=()=>location.href=`/${categorySlug(a[0].category)}/${encodeURIComponent(a[0].slug)}`;document.getElementById("hero").style.cursor="pointer"}if(s.youtube_featured_video)document.getElementById("yt").innerHTML=`<iframe width="100%" height="220" src="https://www.youtube.com/embed/${encodeURIComponent(s.youtube_featured_video)}" frameborder="0" allowfullscreen></iframe>`;facts=Array.isArray(f)?f:[];renderFact();renderHoroscope(Array.isArray(h)?h:[]);document.getElementById("nextFact").onclick=()=>{if(facts.length){factIndex=(factIndex+1)%facts.length;renderFact()}}}function renderFact(){let box=document.getElementById("funFacts");if(!facts.length){box.innerHTML="<p>No fun facts published yet.</p>";document.getElementById("nextFact").style.display="none";return}let x=facts[factIndex];box.innerHTML=`<div class="fact-category">${e(x.category)}</div><h3>${e(x.title)}</h3><p class="fact-text">${e(x.fact)}</p>${x.source?`<div class="fact-source">Source: ${e(x.source)}</div>`:""}`;const d=document.getElementById("factDots");if(d)d.innerHTML=facts.slice(0,8).map((_,i)=>`<button class="fact-dot ${i===factIndex?"active":""}" aria-label="Fact ${i+1}"></button>`).join("");if(d)d.querySelectorAll(".fact-dot").forEach((b,i)=>b.onclick=()=>{factIndex=i;renderFact()})}function renderHoroscope(rows){let monthName=new Date().toLocaleString("en-IN",{month:"long",year:"numeric"});document.getElementById("horoscopeMonthTitle").textContent=monthName;if(!rows.length){document.getElementById("horoscope").innerHTML="<p>No horoscope published for this month yet.</p>";return}let bySign={};rows.forEach(x=>bySign[x.sign]=x);document.getElementById("horoscope").innerHTML=zodiacOrder.filter(s=>bySign[s]).map(sign=>`<div class="zodiac"><div class="zodiac-head"><span>${zodiacIcons[sign]} ${sign}</span></div><p>${e(bySign[sign].content)}</p></div>`).join("")}go();
+</script>
 </body>
 </html>
