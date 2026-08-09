@@ -50,6 +50,138 @@ a{color:inherit}.container{width:min(1280px,94%);margin:auto}
 @media(max-width:950px){.top-grid{grid-template-columns:1fr}.right-rail{display:grid;grid-template-columns:1fr 1fr;align-items:start}.hero{min-height:500px}.news-list{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.mast{height:72px}.mast img{width:145px;height:50px}.nav{gap:16px}.nav a{font-size:13px}.top-grid{margin-top:16px}.hero{min-height:420px}.hero-content{padding:25px 22px}.hero h1{font-size:32px}.right-rail,.news-list,.bottom-promo{grid-template-columns:1fr}.section-heading{display:block}.section-heading span{display:block;margin-top:4px}}
 
+
+/* ===== CP TIMES FULL-WIDTH PROFESSIONAL UI/UX UPGRADE ===== */
+html,body{width:100%;margin:0;padding:0}
+body{background:#f4f5f7;color:#111827}
+
+/* Full-width header */
+.mast{
+  width:100%;
+  min-height:92px;
+  padding:0 clamp(24px,4vw,64px);
+  background:#fff;
+  border-bottom:3px solid #d71920;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.mast-inner{width:100%;max-width:1500px;margin:0 auto}
+
+/* Navigation uses the full available screen */
+.nav{
+  width:100%;
+  padding:0 clamp(24px,4vw,64px);
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  gap:clamp(18px,2.2vw,34px);
+  background:#fff;
+  border-bottom:1px solid #ddd;
+}
+.nav-inner{width:100%;max-width:1500px;margin:0 auto}
+
+/* Breaking strip */
+.breaking-inner{
+  width:100%;
+  max-width:1500px;
+  margin:0 auto;
+  padding-left:clamp(24px,4vw,64px);
+  padding-right:clamp(24px,4vw,64px);
+}
+
+/* Main page frame: much wider than the old narrow centered layout */
+.container{
+  width:calc(100% - clamp(32px,6vw,120px));
+  max-width:1500px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+/* More balanced desktop proportions */
+.top-grid{
+  grid-template-columns:minmax(0,3.15fr) minmax(320px,1fr);
+  gap:28px;
+  margin-top:22px;
+}
+
+/* Main story uses available width */
+.hero{
+  min-height:535px;
+  border-radius:10px;
+}
+
+/* Sidebar cards */
+.top-sidebar{gap:20px}
+.sidebar-card{
+  border:1px solid #dfe2e6;
+  border-radius:10px;
+  box-shadow:0 5px 18px rgba(17,24,39,.07);
+}
+
+/* Latest news should also use the wider canvas */
+.latest-section{margin-top:4px}
+.news-list{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px;
+}
+
+/* Add a subtle page rhythm/background rather than stark white margins */
+main.container{
+  padding-top:2px;
+  padding-bottom:20px;
+}
+
+/* Better section hierarchy */
+.section-heading{
+  margin-top:8px;
+  padding:0 0 10px;
+}
+.section-heading h2{font-size:30px}
+
+/* Cards feel more editorial */
+.card{
+  border-color:#e0e3e7;
+  box-shadow:0 3px 12px rgba(17,24,39,.06);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 22px rgba(17,24,39,.11);
+}
+
+/* Desktop: keep the sidebar visually attached to the top story */
+@media(min-width:1001px){
+  .top-sidebar{
+    position:sticky;
+    top:16px;
+    align-self:start;
+  }
+}
+
+/* Very wide screens */
+@media(min-width:1600px){
+  .container,.breaking-inner,.mast-inner,.nav-inner{max-width:1580px}
+  .hero{min-height:560px}
+}
+
+/* Tablet */
+@media(max-width:1000px){
+  .container{width:calc(100% - 36px)}
+  .top-grid{grid-template-columns:1fr}
+  .top-sidebar{display:grid;grid-template-columns:1fr 1fr;position:static}
+}
+
+/* Mobile */
+@media(max-width:700px){
+  .container{width:calc(100% - 24px)}
+  .mast{padding:0 12px}
+  .nav{padding:0 12px;gap:16px}
+  .breaking-inner{padding-left:12px;padding-right:12px}
+  .top-grid{gap:16px}
+  .hero{min-height:410px;border-radius:7px}
+  .top-sidebar{display:grid;grid-template-columns:1fr}
+  .news-list{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
