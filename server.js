@@ -6,9 +6,19 @@ const rateLimit=require("express-rate-limit");
 const {createClient}=require("@supabase/supabase-js");
 const app=express();
 const PORT=process.env.PORT||10000;
-const URL=process.env.SUPABASE_URL, KEY=process.env.SUPABASE_ANON_KEY;
+const URL = process.env.SUPABASE_URL;
+const KEY = process.env.SUPABASE_ANON_KEY;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SITE=process.env.SITE_URL||"https://cptimes.in";
 const sb=(URL&&KEY)?createClient(URL,KEY,{auth:{persistSession:false}}):null;
+const adminSb = (URL && SERVICE_ROLE_KEY)
+  ? createClient(URL, SERVICE_ROLE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    })
+  : null;
 app.use(helmet({contentSecurityPolicy:false}));
 app.use(compression());
 app.use(express.json({limit:"2mb"}));
@@ -20,7 +30,41 @@ const categorySlug=x=>String(x||"").trim().toLowerCase().replace(/\s+/g,"-");
 const bodyHtml=x=>String(x||"").split(/\n{2,}/).map(p=>`<p>${esc(p).replace(/\n/g,"<br>")}</p>`).join("");
 async function published(slug){if(!sb)return null;const {data}=await sb.from("articles").select("*").eq("slug",slug).eq("status","published").maybeSingle();return data||null}
 app.get("/api/config",(q,r)=>r.json({supabaseUrl:URL||"",supabaseAnonKey:KEY||"",siteUrl:SITE}));
-app.get("/api/health",(q,r)=>r.json({ok:true}));
+app.get("/api/health", async (q, r) => {
+  if (!adminSb) {
+    return r.status(503).json({
+      ok: false,
+      serviceRole: false
+    });
+  }
+
+  try {
+    const { error } = await adminSb
+      .from("contributor_allowlist")
+      .select("email")
+      .limit(1);
+
+    if (error) {
+      return r.status(500).json({
+        ok: false,
+        serviceRole: false,
+        error: error.message
+      });
+    }
+
+    r.json({
+      ok: true,
+      serviceRole: true
+    });
+
+  } catch (err) {
+    r.status(500).json({
+      ok: false,
+      serviceRole: false,
+      error: err.message
+    });
+  }
+});
 app.get("/api/articles",async(q,r)=>{if(!sb)return r.status(503).json({error:"Supabase not configured"});let x=sb.from("articles").select("id,title,slug,category,excerpt,image_url,author_name,published_at,featured").eq("status","published").order("published_at",{ascending:false}).limit(Math.min(Number(q.query.limit)||12,50));if(q.query.category)x=x.eq("category",q.query.category);const {data,error}=await x;if(error)return r.status(500).json({error:error.message});r.json(data||[])});
 app.get("/api/articles/:slug",async(q,r)=>{const a=await published(q.params.slug);if(!a)return r.status(404).json({error:"Not found"});r.json(a)});
 app.get("/api/breaking",async(q,r)=>{if(!sb)return r.status(503).json({error:"Supabase not configured"});const {data,error}=await sb.from("breaking_news").select("*").eq("active",true).order("priority",{ascending:false}).order("created_at",{ascending:false}).limit(10);if(error)return r.status(500).json({error:error.message});r.json(data||[])});
