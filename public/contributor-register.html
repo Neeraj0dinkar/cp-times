@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Contributor Registration | CP Times Newsroom</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f5f7;
+      color: #1f2937;
+    }
+
+    .topbar {
+      height: 8px;
+      background: #e31b23;
+    }
+
+    .header {
+      background: #ffffff;
+      border-bottom: 1px solid #ddd;
+      padding: 22px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      height: 48px;
+      width: auto;
+    }
+
+    .back-link {
+      color: #111827;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .page {
+      min-height: calc(100vh - 90px);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 55px 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      padding: 38px;
+    }
+
+    .brand-line {
+      width: 55px;
+      height: 4px;
+      background: #e31b23;
+      margin-bottom: 18px;
+      border-radius: 5px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid #cfd4dc;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #e31b23;
+      box-shadow: 0 0 0 3px rgba(227,27,35,0.10);
+    }
+
+    .button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: 0;
+      border-radius: 8px;
+      background: #e31b23;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: #c9151c;
+    }
+
+    .button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .info {
+      background: #eef5ff;
+      color: #1e40af;
+    }
+
+    .error {
+      background: #fff1f2;
+      color: #b91c1c;
+    }
+
+    .success {
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .security-note {
+      margin-top: 25px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-left: 4px solid #e31b23;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .otp-input {
+      text-align: center;
+      font-size: 26px;
+      letter-spacing: 8px;
+      font-weight: 700;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      color: #777;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 18px 20px;
+      }
+
+      .card {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar"></div>
+
+  <header class="header">
+
+    <a href="/">
+      <img
+        src="/cv-news-logo.jpeg"
+        alt="CP Times"
+        class="logo"
+      >
+    </a>
+
+    <a href="/" class="back-link">
+      Back to CP Times
+    </a>
+
+  </header>
+
+
+  <main class="page">
+
+    <section class="card">
+
+      <div class="brand-line"></div>
+
+      <h1>Contributor Registration</h1>
+
+      <p class="subtitle">
+        Register for the CP Times Newsroom using your
+        authorised organisation email address.
+      </p>
+
+
+      <!-- STEP 1 -->
+
+      <div id="emailStep">
+
+        <label for="email">
+          Registered Email Address
+        </label>
+
+        <input
+          type="email"
+          id="email"
+          placeholder="Enter your registered email"
+          autocomplete="email"
+        >
+
+        <button
+          class="button"
+          id="generateOtp"
+        >
+          Generate OTP
+        </button>
+
+      </div>
+
+
+      <!-- STEP 2 -->
+
+      <div id="otpStep" class="hidden">
+
+        <label for="otp">
+          Enter Verification Code
+        </label>
+
+        <input
+          type="text"
+          id="otp"
+          class="otp-input"
+          maxlength="6"
+          inputmode="numeric"
+          placeholder="------"
+        >
+
+        <div class="small">
+          Enter the 6-digit code sent to your registered email.
+        </div>
+
+        <button
+          class="button"
+          id="verifyOtp"
+        >
+          Verify OTP
+        </button>
+
+      </div>
+
+
+      <!-- STEP 3 -->
+
+      <div id="passwordStep" class="hidden">
+
+        <label for="password">
+          Create Password
+        </label>
+
+        <input
+          type="password"
+          id="password"
+          placeholder="Create a strong password"
+        >
+
+        <br><br>
+
+        <label for="confirmPassword">
+          Confirm Password
+        </label>
+
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Re-enter your password"
+        >
+
+        <button
+          class="button"
+          id="createAccount"
+        >
+          Create Account
+        </button>
+
+      </div>
+
+
+      <div
+        id="message"
+        class="message"
+      ></div>
+
+
+      <div class="security-note">
+
+        <strong>Security notice</strong><br>
+
+        Only authorised CP Times contributors can register.
+        Your email address must be present in the CP Times
+        contributor list.
+
+      </div>
+
+      <div class="footer">
+        CP Times Newsroom
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script>
+
+    const emailStep =
+      document.getElementById("emailStep");
+
+    const otpStep =
+      document.getElementById("otpStep");
+
+    const passwordStep =
+      document.getElementById("passwordStep");
+
+    const emailInput =
+      document.getElementById("email");
+
+    const otpInput =
+      document.getElementById("otp");
+
+    const passwordInput =
+      document.getElementById("password");
+
+    const confirmPasswordInput =
+      document.getElementById("confirmPassword");
+
+    const message =
+      document.getElementById("message");
+
+
+    function showMessage(text, type) {
+
+      message.textContent = text;
+
+      message.className =
+        "message " + type;
+
+      message.style.display = "block";
+
+    }
+
+
+    document
+      .getElementById("generateOtp")
+      .addEventListener("click", async () => {
+
+        const email =
+          emailInput.value.trim();
+
+        if (!email) {
+
+          showMessage(
+            "Please enter your registered email address.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        const button =
+          document.getElementById("generateOtp");
+
+        button.disabled = true;
+
+        button.textContent =
+          "Checking...";
+
+
+        try {
+
+          const response =
+            await fetch("/api/contributor/request-otp", {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                email: email
+              })
+
+            });
+
+
+          const result =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            showMessage(
+              result.message ||
+              "Unable to send OTP.",
+              "error"
+            );
+
+            button.disabled = false;
+
+            button.textContent =
+              "Generate OTP";
+
+            return;
+
+          }
+
+
+          showMessage(
+            "OTP sent successfully. Please check your email.",
+            "success"
+          );
+
+
+          emailStep.classList.add("hidden");
+
+          otpStep.classList.remove("hidden");
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            "Unable to contact the CP Times server. Please try again.",
+            "error"
+          );
+
+          button.disabled = false;
+
+          button.textContent =
+            "Generate OTP";
+
+        }
+
+      });
+
+
+    document
+      .getElementById("verifyOtp")
+      .addEventListener("click", async () => {
+
+        const email =
+          emailInput.value.trim();
+
+        const token =
+          otpInput.value.trim();
+
+
+        if (!token || token.length !== 6) {
+
+          showMessage(
+            "Please enter the 6-digit OTP.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        const button =
+          document.getElementById("verifyOtp");
+
+        button.disabled = true;
+
+        button.textContent =
+          "Verifying...";
+
+
+        try {
+
+          const response =
+            await fetch("/api/contributor/verify-otp", {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                email: email,
+                token: token
+              })
+
+            });
+
+
+          const result =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            showMessage(
+              result.message ||
+              "Invalid OTP.",
+              "error"
+            );
+
+            button.disabled = false;
+
+            button.textContent =
+              "Verify OTP";
+
+            return;
+
+          }
+
+
+          showMessage(
+            "Email verified successfully.",
+            "success"
+          );
+
+
+          otpStep.classList.add("hidden");
+
+          passwordStep.classList.remove("hidden");
+
+        }
+
+        catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            "Unable to verify OTP. Please try again.",
+            "error"
+          );
+
+          button.disabled = false;
+
+          button.textContent =
+            "Verify OTP";
+
+        }
+
+      });
+
+
+    document
+      .getElementById("createAccount")
+      .addEventListener("click", async () => {
+
+        const password =
+          passwordInput.value;
+
+        const confirmPassword =
+          confirmPasswordInput.value;
+
+
+        if (password.length < 10) {
+
+          showMessage(
+            "Password must contain at least 10 characters.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        if (password !== confirmPassword) {
+
+          showMessage(
+            "Passwords do not match.",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        showMessage(
+          "Password setup will be connected in the next step.",
+          "info"
+        );
+
+      });
+
+  </script>
+
+</body>
+</html>
