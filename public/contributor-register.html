@@ -376,6 +376,9 @@
     const message =
       document.getElementById("message");
 
+    // Short-lived token returned by the server after successful OTP verification.
+    let registrationToken = "";
+
 
     function showMessage(text, type) {
 
@@ -627,10 +630,71 @@
         }
 
 
-        showMessage(
-          "Password setup will be connected in the next step.",
-          "info"
-        );
+        if (!registrationToken) {
+          showMessage(
+            "Your email verification session has expired. Please verify your email again.",
+            "error"
+          );
+          return;
+        }
+
+        const button =
+          document.getElementById("createAccount");
+
+        button.disabled = true;
+        button.textContent = "Creating Account...";
+
+        try {
+          const response =
+            await fetch("/api/contributor/set-password", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                registrationToken: registrationToken,
+                password: password
+              })
+            });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            showMessage(
+              result.error ||
+              result.message ||
+              "Unable to create account. Please try again.",
+              "error"
+            );
+
+            button.disabled = false;
+            button.textContent = "Create Account";
+            return;
+          }
+
+          showMessage(
+            "Account created successfully. You can now log in.",
+            "success"
+          );
+
+          button.disabled = true;
+          registrationToken = "";
+
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 2000);
+
+        } catch (error) {
+          console.error("Create account error:", error);
+
+          showMessage(
+            "Unable to create your account. Please try again.",
+            "error"
+          );
+
+          button.disabled = false;
+          button.textContent = "Create Account";
+        }
 
       });
 
