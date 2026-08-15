@@ -377,7 +377,11 @@
       document.getElementById("message");
 
     // Short-lived token returned by the server after successful OTP verification.
-    let registrationToken = "";
+    let registrationToken =
+      sessionStorage.getItem("cpTimesRegistrationToken") || "";
+
+    const storedRegistrationEmail =
+      sessionStorage.getItem("cpTimesRegistrationEmail") || "";
 
 
     function showMessage(text, type) {
@@ -545,10 +549,10 @@
           const result =
             await response.json();
 
-
           if (!response.ok) {
 
             showMessage(
+              result.error ||
               result.message ||
               "Invalid OTP.",
               "error"
@@ -564,11 +568,25 @@
           }
 
 
+          if (!result.registrationToken) {
+            showMessage(
+              "Email verification succeeded, but the registration session could not be created. Please request a new OTP.",
+              "error"
+            );
+
+            button.disabled = false;
+            button.textContent = "Verify OTP";
+            return;
+          }
+
+          registrationToken = result.registrationToken;
+          sessionStorage.setItem("cpTimesRegistrationToken", registrationToken);
+          sessionStorage.setItem("cpTimesRegistrationEmail", email);
+
           showMessage(
             "Email verified successfully.",
             "success"
           );
-
 
           otpStep.classList.add("hidden");
 
@@ -679,6 +697,8 @@
 
           button.disabled = true;
           registrationToken = "";
+          sessionStorage.removeItem("cpTimesRegistrationToken");
+          sessionStorage.removeItem("cpTimesRegistrationEmail");
 
           setTimeout(() => {
             window.location.href = "/login";
