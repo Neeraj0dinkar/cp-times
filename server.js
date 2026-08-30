@@ -8,6 +8,9 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
+// Render runs the app behind a trusted reverse proxy.
+app.set("trust proxy", 1);
+
 const PORT = process.env.PORT || 10000;
 
 const URL = process.env.SUPABASE_URL;
