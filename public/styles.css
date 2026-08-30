@@ -40,3 +40,37 @@ a{color:inherit}.container{width:min(1280px,94%);margin:auto}
 
 @media(max-width:950px){.top-grid{grid-template-columns:1fr}.right-rail{display:grid;grid-template-columns:1fr 1fr;align-items:start}.hero{min-height:500px}.news-list{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.mast{height:72px}.mast img{width:145px;height:50px}.nav{gap:16px}.nav a{font-size:13px}.top-grid{margin-top:16px}.hero{min-height:420px}.hero-content{padding:25px 22px}.hero h1{font-size:32px}.right-rail,.news-list,.bottom-promo{grid-template-columns:1fr}.section-heading{display:block}.section-heading span{display:block;margin-top:4px}}
+
+
+/* ============================================================
+   NEWSROOM LOGIN
+   ============================================================ */
+
+.login-page{background:#f7f7f8;min-height:100vh}
+.login-mast{justify-content:center;height:88px}
+.login{min-height:calc(100vh - 88px);display:flex;justify-content:center;align-items:flex-start;padding:52px 20px 70px}
+.login-panel{width:min(460px,100%);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 30px rgba(15,23,42,.09);padding:34px}
+.login-accent{width:56px;height:4px;border-radius:4px;background:var(--red);margin-bottom:18px}
+.eyebrow{margin:0 0 7px;color:var(--red);font-size:11px;font-weight:900;letter-spacing:1px}
+.login-panel h1{font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.15;margin:0 0 8px}
+.login-subtitle{margin:0 0 27px;color:var(--muted);font-size:14px;line-height:1.55}
+.login-panel label{display:block;margin:0 0 7px;font-size:14px;font-weight:800}
+.login-panel .input{display:block;width:100%;height:46px;padding:11px 13px;margin:0 0 17px;border:1px solid #cfd4dc;border-radius:7px;background:#fff;color:var(--ink);font-size:15px;outline:none}
+.login-panel .input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(215,25,32,.10)}
+.login-submit{width:100%;height:46px;border:0;border-radius:7px;cursor:pointer;font-size:15px;font-weight:800}
+.login-message{min-height:0;margin-top:14px}
+.login-message.notice{padding:11px 12px;border-radius:7px;background:#fff1f2;color:#b91c1c;font-size:13px;line-height:1.45}
+.register-divider{display:flex;align-items:center;gap:12px;margin:27px 0 18px;color:#9ca3af;font-size:12px}
+.register-divider:before,.register-divider:after{content:"";height:1px;background:#e5e7eb;flex:1}
+.register-box{padding:17px;background:#fafafa;border:1px solid #e8e9ec;border-radius:9px}
+.register-box strong{display:block;font-size:14px;line-height:1.4}
+.register-box p{margin:6px 0 14px;color:#6b7280;font-size:12.5px;line-height:1.5}
+.register-btn{display:flex;align-items:center;justify-content:center;width:100%;height:44px;border:1px solid var(--red);border-radius:7px;background:#fff;color:var(--red);text-decoration:none;font-size:14px;font-weight:800}
+.register-btn:hover{background:var(--red);color:#fff}
+.home-link{display:block;text-align:center;margin-top:21px;color:#6b7280;text-decoration:none;font-size:12.5px}
+.home-link:hover{color:var(--red)}
+@media(max-width:520px){
+  .login{padding:28px 14px 50px}
+  .login-panel{padding:27px 22px}
+  .login-panel h1{font-size:28px}
+}

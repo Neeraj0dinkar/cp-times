@@ -1,1 +1,82 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>CP Times Admin Login</title><link rel="stylesheet" href="/styles.css"></head><body><header class="mast"><a href="/"><img src="/cv-news-logo.jpeg" alt="CP Times"></a></header><main class="login"><section class="panel" style="width:min(420px,92%)"><h1>CP Times Admin Login</h1><form id="f"><label>Email</label><input class="input" name="email" type="email" required><label>Password</label><input class="input" name="password" type="password" required><button class="btn red">Sign in</button></form><div id="m"></div></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>(async()=>{let c=await fetch("/api/config").then(r=>r.json()),s=supabase.createClient(c.supabaseUrl,c.supabaseAnonKey);f.onsubmit=async e=>{e.preventDefault();let x=new FormData(f),{error}=await s.auth.signInWithPassword({email:x.get("email"),password:x.get("password")});if(error)m.innerHTML="<div class=notice>"+error.message+"</div>";else location="/admin"}})()</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Newsroom Login | CP Times</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="login-page">
+  <header class="mast login-mast">
+    <a href="/" aria-label="CP Times home">
+      <img src="/cv-news-logo.jpeg" alt="CP Times">
+    </a>
+  </header>
+
+  <main class="login">
+    <section class="panel login-panel">
+      <div class="login-accent"></div>
+      <p class="eyebrow">CP TIMES NEWSROOM</p>
+      <h1>Newsroom Login</h1>
+      <p class="login-subtitle">Sign in to access the CP Times newsroom.</p>
+
+      <form id="f">
+        <label for="email">Email</label>
+        <input id="email" class="input" name="email" type="email" autocomplete="email" required>
+
+        <label for="password">Password</label>
+        <input id="password" class="input" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="btn red login-submit" type="submit">Sign in</button>
+      </form>
+
+      <div id="m" class="login-message" role="alert"></div>
+
+      <div class="register-divider"><span>New to the newsroom?</span></div>
+
+      <div class="register-box">
+        <strong>Are you a CP Times Reporter/Contributor?</strong>
+        <p>Register with your authorised email address and verify it using OTP.</p>
+        <a class="btn register-btn" href="/reporter-register">Register as Reporter</a>
+      </div>
+
+      <a class="home-link" href="/">← Back to CP Times</a>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (async () => {
+      const form = document.getElementById("f");
+      const message = document.getElementById("m");
+
+      try {
+        const c = await fetch("/api/config").then(r => r.json());
+        const s = supabase.createClient(c.supabaseUrl, c.supabaseAnonKey);
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          message.className = "login-message";
+          message.textContent = "";
+
+          const x = new FormData(form);
+          const { error } = await s.auth.signInWithPassword({
+            email: x.get("email"),
+            password: x.get("password")
+          });
+
+          if (error) {
+            message.className = "login-message notice";
+            message.textContent = error.message;
+          } else {
+            location = "/admin";
+          }
+        });
+      } catch (error) {
+        message.className = "login-message notice";
+        message.textContent = "Unable to load the authentication service. Please try again later.";
+      }
+    })();
+  </script>
+</body>
+</html>

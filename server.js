@@ -2017,6 +2017,19 @@ app.get(
 );
 
 
+
+app.get(
+  "/reporter-register",
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        PUB,
+        "contributor-register.html"
+      )
+    );
+  }
+);
+
 // ============================================================
 // DEFAULT WEBSITE ROUTE
 // ============================================================
