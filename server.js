@@ -104,7 +104,15 @@ const PUB = path.join(__dirname, "public");
 
 app.use(
   express.static(PUB, {
-    maxAge: "1h"
+    etag: false,
+    maxAge: 0,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith("admin.html") || filePath.endsWith("contributor-register.html")) {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+      }
+    }
   })
 );
 
@@ -1471,12 +1479,10 @@ app.get(
 app.get(
   "/admin",
   (req, res) => {
-    res.sendFile(
-      path.join(
-        PUB,
-        "admin.html"
-      )
-    );
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+    res.sendFile(path.join(PUB, "admin.html"), { cacheControl: false });
   }
 );
 
@@ -1498,12 +1504,10 @@ app.get(
 app.get(
   "/reporter-register",
   (req, res) => {
-    res.sendFile(
-      path.join(
-        PUB,
-        "contributor-register.html"
-      )
-    );
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+    res.sendFile(path.join(PUB, "contributor-register.html"), { cacheControl: false });
   }
 );
 
