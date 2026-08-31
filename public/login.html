@@ -69,6 +69,20 @@
             message.className = "login-message notice";
             message.textContent = error.message;
           } else {
+            const { data: currentUser } = await s.auth.getUser();
+            const { data: profile, error: profileError } = await s
+              .from("profiles")
+              .select("id, full_name, role")
+              .eq("id", currentUser?.user?.id || "")
+              .maybeSingle();
+
+            if (profileError || !profile) {
+              await s.auth.signOut();
+              message.className = "login-message notice";
+              message.textContent = "Your reporter registration is awaiting administrator approval. You cannot access the newsroom yet.";
+              return;
+            }
+
             location = "/admin";
           }
         });

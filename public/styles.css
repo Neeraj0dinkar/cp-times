@@ -74,3 +74,5 @@ a{color:inherit}.container{width:min(1280px,94%);margin:auto}
   .login-panel{padding:27px 22px}
   .login-panel h1{font-size:28px}
 }
+
+.contributor-panel .section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:12px}.contributor-panel .section-heading h2{margin-bottom:5px}@media(max-width:700px){.contributor-panel .section-heading{align-items:stretch;flex-direction:column}}

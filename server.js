@@ -8,7 +8,8 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// Render runs the app behind a trusted reverse proxy.
+// Render runs the app behind a trusted reverse proxy. Trust the first proxy
+// so express-rate-limit can safely determine the client IP from X-Forwarded-For.
 app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 10000;
@@ -158,10 +159,10 @@ async function published(slug) {
 
 
 // ============================================================
-// CONTRIBUTOR HELPERS
+// CONTRIBUTOR / REPORTER HELPERS
 // ============================================================
 
-async function getContributor(email) {
+async function getRegistration(email) {
   if (!adminSb) return null;
 
   const normalizedEmail = String(email || "")
@@ -171,23 +172,52 @@ async function getContributor(email) {
   if (!normalizedEmail) return null;
 
   const { data, error } = await adminSb
-    .from("contributor_allowlist")
+    .from("contributor_registrations")
     .select("*")
     .eq("email", normalizedEmail)
     .maybeSingle();
 
   if (error) {
-    console.error(
-      "Contributor allowlist error:",
-      error
-    );
-
+    console.error("Contributor registration lookup error:", error);
     return null;
   }
 
   return data || null;
 }
 
+async function requireAdmin(req, res) {
+  if (!adminSb) {
+    res.status(503).json({ success: false, error: "Authentication service is not configured." });
+    return null;
+  }
+
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+
+  if (!token) {
+    res.status(401).json({ success: false, error: "Authentication required." });
+    return null;
+  }
+
+  const { data: userData, error: userError } = await adminSb.auth.getUser(token);
+  if (userError || !userData?.user) {
+    res.status(401).json({ success: false, error: "Your session is invalid or expired." });
+    return null;
+  }
+
+  const { data: profile, error: profileError } = await adminSb
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+
+  if (profileError || !profile || profile.role !== "admin") {
+    res.status(403).json({ success: false, error: "Administrator access is required." });
+    return null;
+  }
+
+  return { user: userData.user, profile };
+}
 
 // ============================================================
 // REGISTRATION TOKEN
@@ -343,7 +373,7 @@ app.get("/api/health", async (req, res) => {
 
   try {
     const { error } = await adminSb
-      .from("contributor_allowlist")
+      .from("contributor_registrations")
       .select("email")
       .limit(1);
 
@@ -371,965 +401,332 @@ app.get("/api/health", async (req, res) => {
 
 // ============================================================
 // CONTRIBUTOR REGISTRATION
-// STEP 1 — REQUEST OTP
+// SELF-REGISTRATION + OTP + ADMIN APPROVAL
 // ============================================================
 
 app.post(
   "/api/contributor/request-otp",
   otpLimiter,
   async (req, res) => {
-
     try {
-
       if (!adminSb || !sb) {
-        return res.status(503).json({
-          success: false,
-          error:
-            "Authentication service is not configured."
-        });
+        return res.status(503).json({ success: false, error: "Authentication service is not configured." });
       }
 
+      const email = String(req.body.email || "").trim().toLowerCase();
+      const fullName = String(req.body.fullName || "").trim();
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      // --------------------------------------------------------
-      // Read email
-      // --------------------------------------------------------
-
-      const email = String(
-        req.body.email || ""
-      )
-        .trim()
-        .toLowerCase();
-
-
-      // --------------------------------------------------------
-      // Validate email format
-      // --------------------------------------------------------
-
-      const emailPattern =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!fullName || fullName.length < 2 || fullName.length > 100) {
+        return res.status(400).json({ success: false, error: "Please enter your full name." });
+      }
 
       if (!emailPattern.test(email)) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Please enter a valid email address."
-        });
+        return res.status(400).json({ success: false, error: "Please enter a valid email address." });
       }
 
+      let registration = await getRegistration(email);
 
-      // --------------------------------------------------------
-      // Check contributor allowlist
-      // --------------------------------------------------------
-
-      const contributor =
-        await getContributor(email);
-
-      if (!contributor) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "This email address is not authorized to register as a CP Times contributor."
-        });
+      if (registration?.status === "approved") {
+        return res.status(409).json({ success: false, error: "This email is already approved as a CP Times reporter. Please use Newsroom Login." });
       }
 
-
-      // --------------------------------------------------------
-      // Check whether contributor is active
-      // --------------------------------------------------------
-
-      if (contributor.active !== true) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "This contributor account is currently inactive. Please contact the CP Times administrator."
-        });
+      if (registration?.status === "suspended") {
+        return res.status(403).json({ success: false, error: "This reporter account is suspended. Please contact the CP Times administrator." });
       }
 
+      if (registration?.status === "rejected") {
+        return res.status(403).json({ success: false, error: "This registration was rejected. Please contact the CP Times administrator." });
+      }
 
-      // --------------------------------------------------------
-      // Check OTP control
-      // --------------------------------------------------------
+      // Create the registration automatically. No Supabase table entry is required from the admin.
+      if (!registration) {
+        const { data, error } = await adminSb
+          .from("contributor_registrations")
+          .insert({
+            email,
+            full_name: fullName,
+            status: "pending"
+          })
+          .select("*")
+          .single();
 
-      const {
-        data: control,
-        error: controlError
-      } = await adminSb
+        if (error) {
+          console.error("Contributor registration create error:", error);
+          return res.status(500).json({ success: false, error: "Unable to create your registration. Please try again." });
+        }
+        registration = data;
+      } else if (registration.full_name !== fullName) {
+        const { data, error } = await adminSb
+          .from("contributor_registrations")
+          .update({ full_name: fullName, updated_at: new Date().toISOString() })
+          .eq("id", registration.id)
+          .select("*")
+          .single();
+        if (!error && data) registration = data;
+      }
+
+      const { data: control, error: controlError } = await adminSb
         .from("otp_control")
-        .select(
-          "email, attempts, locked_until, last_sent_at"
-        )
+        .select("email, attempts, locked_until, last_sent_at")
         .eq("email", email)
         .maybeSingle();
 
-
       if (controlError) {
-        console.error(
-          "OTP control lookup error:",
-          controlError
-        );
-
-        return res.status(500).json({
-          success: false,
-          error:
-            "Unable to check OTP status."
-        });
+        console.error("OTP control lookup error:", controlError);
+        return res.status(500).json({ success: false, error: "Unable to check OTP status." });
       }
 
-
-      // --------------------------------------------------------
-      // If previous 24-hour lock has expired,
-      // reset the attempt counter.
-      // --------------------------------------------------------
-
-      let attempts = Number(
-        control?.attempts || 0
-      );
-
-      if (
-        control?.locked_until &&
-        new Date(control.locked_until) <=
-          new Date()
-      ) {
-
+      let attempts = Number(control?.attempts || 0);
+      if (control?.locked_until && new Date(control.locked_until) <= new Date()) {
         attempts = 0;
-
-        await adminSb
-          .from("otp_control")
-          .upsert(
-            {
-              email,
-              attempts: 0,
-              locked_until: null,
-              updated_at:
-                new Date().toISOString()
-            },
-            {
-              onConflict: "email"
-            }
-          );
+        await adminSb.from("otp_control").upsert({ email, attempts: 0, locked_until: null, updated_at: new Date().toISOString() }, { onConflict: "email" });
       }
 
-
-      // --------------------------------------------------------
-      // Check 24-hour lock
-      // --------------------------------------------------------
-
-      if (
-        control?.locked_until &&
-        new Date(control.locked_until) >
-          new Date()
-      ) {
-
-        const lockedUntil = new Date(
-          control.locked_until
-        );
-
+      if (control?.locked_until && new Date(control.locked_until) > new Date()) {
         return res.status(429).json({
           success: false,
           locked: true,
-          error:
-            "Too many incorrect OTP attempts. OTP generation is locked for 24 hours.",
-          lockedUntil:
-            lockedUntil.toISOString()
+          error: "Too many incorrect OTP attempts. OTP generation is locked for 24 hours.",
+          lockedUntil: new Date(control.locked_until).toISOString()
         });
       }
-
-
-      // --------------------------------------------------------
-      // Prevent rapid resend
-      // --------------------------------------------------------
 
       if (control?.last_sent_at) {
-
-        const lastSent = new Date(
-          control.last_sent_at
-        );
-
-        const secondsSinceLastOTP =
-          (Date.now() -
-            lastSent.getTime()) /
-          1000;
-
-        if (
-          secondsSinceLastOTP < 60
-        ) {
-
-          const remaining = Math.ceil(
-            60 - secondsSinceLastOTP
-          );
-
-          return res.status(429).json({
-            success: false,
-            error:
-              `Please wait ${remaining} seconds before requesting another OTP.`,
-            retryAfter: remaining
-          });
+        const seconds = (Date.now() - new Date(control.last_sent_at).getTime()) / 1000;
+        if (seconds < 60) {
+          const remaining = Math.ceil(60 - seconds);
+          return res.status(429).json({ success: false, error: `Please wait ${remaining} seconds before requesting another OTP.`, retryAfter: remaining });
         }
       }
 
-
-      // --------------------------------------------------------
-      // Send OTP through Supabase
-      // --------------------------------------------------------
-
-      const {
-        error: otpError
-      } = await sb.auth.signInWithOtp({
+      const { error: otpError } = await sb.auth.signInWithOtp({
         email,
-        options: {
-          shouldCreateUser: true
-        }
+        options: { shouldCreateUser: true }
       });
-
 
       if (otpError) {
-
-        console.error(
-          "Supabase OTP error:",
-          otpError
-        );
-
-        return res.status(500).json({
-          success: false,
-          error:
-            "Unable to send OTP. Please try again later."
-        });
+        console.error("Supabase OTP error:", otpError);
+        return res.status(500).json({ success: false, error: "Unable to send OTP. Please try again later." });
       }
 
+      const now = new Date().toISOString();
+      await adminSb.from("otp_control").upsert({ email, attempts, locked_until: null, last_sent_at: now, updated_at: now }, { onConflict: "email" });
+      await adminSb.from("audit_log").insert({ action: "contributor_otp_requested", target_email: email, target_id: registration.id, details: { name: registration.full_name } });
 
-      // --------------------------------------------------------
-      // Update OTP control
-      //
-      // IMPORTANT:
-      // Sending an OTP does NOT count as an invalid attempt.
-      //
-      // The attempt counter is increased only when the user
-      // enters an incorrect OTP.
-      // --------------------------------------------------------
-
-      const now =
-        new Date().toISOString();
-
-      const {
-        error: upsertError
-      } = await adminSb
-        .from("otp_control")
-        .upsert(
-          {
-            email,
-            attempts,
-            locked_until: null,
-            last_sent_at: now,
-            updated_at: now
-          },
-          {
-            onConflict: "email"
-          }
-        );
-
-
-      if (upsertError) {
-        console.error(
-          "OTP control update error:",
-          upsertError
-        );
-      }
-
-
-      // --------------------------------------------------------
-      // Audit log
-      // --------------------------------------------------------
-
-      const {
-        error: auditError
-      } = await adminSb
-        .from("audit_log")
-        .insert({
-          action:
-            "contributor_otp_requested",
-          target_email: email,
-          details: {
-            name:
-              contributor.full_name ||
-              null
-          }
-        });
-
-
-      if (auditError) {
-        console.error(
-          "Audit log error:",
-          auditError
-        );
-      }
-
-
-      // --------------------------------------------------------
-      // Success
-      // --------------------------------------------------------
-
-      return res.json({
-        success: true,
-        message:
-          "OTP sent successfully to your registered email address."
-      });
-
-
+      return res.json({ success: true, message: "OTP sent successfully. Please check your email." });
     } catch (error) {
-
-      console.error(
-        "Request OTP unexpected error:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        error:
-          "Something went wrong while generating the OTP."
-      });
+      console.error("Request OTP unexpected error:", error);
+      return res.status(500).json({ success: false, error: "Something went wrong while generating the OTP." });
     }
   }
 );
-
-
-// ============================================================
-// CONTRIBUTOR REGISTRATION
-// STEP 2 — VERIFY OTP
-// ============================================================
 
 app.post(
   "/api/contributor/verify-otp",
   otpLimiter,
   async (req, res) => {
-
     try {
+      if (!adminSb || !sb) return res.status(503).json({ success: false, error: "Authentication service is not configured." });
 
-      if (!adminSb || !sb) {
-        return res.status(503).json({
-          success: false,
-          error:
-            "Authentication service is not configured."
-        });
+      const email = String(req.body.email || "").trim().toLowerCase();
+      const token = String(req.body.token || "").trim();
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailPattern.test(email)) return res.status(400).json({ success: false, error: "Please enter a valid email address." });
+      if (!/^\d{6}$/.test(token)) return res.status(400).json({ success: false, error: "Please enter the 6-digit OTP." });
+
+      const registration = await getRegistration(email);
+      if (!registration) return res.status(404).json({ success: false, error: "Registration record not found. Please request a new OTP." });
+      if (registration.status === "approved") return res.status(409).json({ success: false, error: "This email is already approved. Please use Newsroom Login." });
+      if (registration.status === "suspended") return res.status(403).json({ success: false, error: "This reporter account is suspended." });
+      if (registration.status === "rejected") return res.status(403).json({ success: false, error: "This registration was rejected. Please contact the administrator." });
+
+      const { data: otpControl, error: otpReadError } = await adminSb.from("otp_control").select("*").eq("email", email).maybeSingle();
+      if (otpReadError) return res.status(500).json({ success: false, error: "Unable to check OTP status." });
+
+      if (otpControl?.locked_until && new Date(otpControl.locked_until) > new Date()) {
+        return res.status(429).json({ success: false, locked: true, error: "Too many incorrect OTP attempts. Please try again after 24 hours.", lockedUntil: new Date(otpControl.locked_until).toISOString() });
       }
 
-
-      // --------------------------------------------------------
-      // Read values
-      // --------------------------------------------------------
-
-      const email = String(
-        req.body.email || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      const token = String(
-        req.body.token || ""
-      ).trim();
-
-
-      // --------------------------------------------------------
-      // Validate email
-      // --------------------------------------------------------
-
-      const emailPattern =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailPattern.test(email)) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Please enter a valid email address."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Validate OTP
-      // --------------------------------------------------------
-
-      if (!/^\d{6}$/.test(token)) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Please enter the 6-digit OTP."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Check contributor
-      // --------------------------------------------------------
-
-      const contributor =
-        await getContributor(email);
-
-      if (!contributor) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "This email address is not registered as a CP Times contributor."
-        });
-      }
-
-
-      if (contributor.active !== true) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "This contributor account is inactive."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Get OTP control record
-      // --------------------------------------------------------
-
-      const {
-        data: otpControl,
-        error: otpReadError
-      } = await adminSb
-        .from("otp_control")
-        .select("*")
-        .eq("email", email)
-        .maybeSingle();
-
-
-      if (otpReadError) {
-
-        console.error(
-          "OTP control read error:",
-          otpReadError
-        );
-
-        return res.status(500).json({
-          success: false,
-          error:
-            "Unable to check OTP status."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Check 24-hour lock
-      // --------------------------------------------------------
-
-      if (
-        otpControl?.locked_until &&
-        new Date(
-          otpControl.locked_until
-        ) > new Date()
-      ) {
-
-        const lockedUntil =
-          new Date(
-            otpControl.locked_until
-          );
-
-        return res.status(429).json({
-          success: false,
-          locked: true,
-          error:
-            "Too many incorrect OTP attempts. Please try again after 24 hours.",
-          lockedUntil:
-            lockedUntil.toISOString()
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Verify OTP using Supabase Auth
-      // --------------------------------------------------------
-
-      const {
-        data: verifyData,
-        error: verifyError
-      } = await sb.auth.verifyOtp({
-        email,
-        token,
-        type: "email"
-      });
-
-
-      // ========================================================
-      // INVALID OTP
-      // ========================================================
-
-      if (
-        verifyError ||
-        !verifyData?.user
-      ) {
-
-        let currentAttempts =
-          Number(
-            otpControl?.attempts || 0
-          );
-
-
-        const newAttempts =
-          currentAttempts + 1;
-
-
-        // ------------------------------------------------------
-        // Third incorrect OTP
-        // ------------------------------------------------------
-
+      const { data: verifyData, error: verifyError } = await sb.auth.verifyOtp({ email, token, type: "email" });
+      if (verifyError || !verifyData?.user) {
+        const newAttempts = Number(otpControl?.attempts || 0) + 1;
         if (newAttempts >= 3) {
-
-          const lockedUntil =
-            new Date(
-              Date.now() +
-                24 *
-                  60 *
-                  60 *
-                  1000
-            ).toISOString();
-
-
-          await adminSb
-            .from("otp_control")
-            .upsert(
-              {
-                email,
-                attempts: newAttempts,
-                locked_until:
-                  lockedUntil,
-                updated_at:
-                  new Date().toISOString()
-              },
-              {
-                onConflict: "email"
-              }
-            );
-
-
-          await adminSb
-            .from("audit_log")
-            .insert({
-              action:
-                "contributor_otp_locked",
-              target_email: email,
-              details: {
-                attempts: newAttempts,
-                reason:
-                  "Three invalid OTP attempts"
-              }
-            });
-
-
-          return res.status(429).json({
-            success: false,
-            locked: true,
-            error:
-              "Three invalid OTP attempts. OTP generation is locked for 24 hours.",
-            lockedUntil
-          });
+          const lockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          await adminSb.from("otp_control").upsert({ email, attempts: newAttempts, locked_until: lockedUntil, updated_at: new Date().toISOString() }, { onConflict: "email" });
+          await adminSb.from("audit_log").insert({ action: "contributor_otp_locked", target_email: email, target_id: registration.id, details: { attempts: newAttempts, reason: "Three invalid OTP attempts" } });
+          return res.status(429).json({ success: false, locked: true, error: "Three invalid OTP attempts. OTP generation is locked for 24 hours.", lockedUntil });
         }
-
-
-        // ------------------------------------------------------
-        // Record invalid attempt
-        // ------------------------------------------------------
-
-        await adminSb
-          .from("otp_control")
-          .upsert(
-            {
-              email,
-              attempts: newAttempts,
-              locked_until: null,
-              updated_at:
-                new Date().toISOString()
-            },
-            {
-              onConflict: "email"
-            }
-          );
-
-
-        await adminSb
-          .from("audit_log")
-          .insert({
-            action:
-              "contributor_invalid_otp",
-            target_email: email,
-            details: {
-              attempt: newAttempts
-            }
-          });
-
-
-        return res.status(401).json({
-          success: false,
-          error: "Invalid OTP.",
-          attemptsRemaining:
-            3 - newAttempts
-        });
+        await adminSb.from("otp_control").upsert({ email, attempts: newAttempts, locked_until: null, updated_at: new Date().toISOString() }, { onConflict: "email" });
+        await adminSb.from("audit_log").insert({ action: "contributor_invalid_otp", target_email: email, target_id: registration.id, details: { attempt: newAttempts } });
+        return res.status(401).json({ success: false, error: "Invalid OTP.", attemptsRemaining: 3 - newAttempts });
       }
 
+      const userId = verifyData.user.id;
+      const now = new Date().toISOString();
+      await adminSb.from("otp_control").upsert({ email, attempts: 0, locked_until: null, last_sent_at: null, updated_at: now }, { onConflict: "email" });
 
-      // ========================================================
-      // OTP SUCCESS
-      // ========================================================
+      const { error: registrationUpdateError } = await adminSb
+        .from("contributor_registrations")
+        .update({ auth_user_id: userId, email_verified_at: now, updated_at: now })
+        .eq("id", registration.id);
 
-      const userId =
-        verifyData.user.id;
-
-
-      // --------------------------------------------------------
-      // Reset OTP attempts
-      // --------------------------------------------------------
-
-      await adminSb
-        .from("otp_control")
-        .upsert(
-          {
-            email,
-            attempts: 0,
-            locked_until: null,
-            last_sent_at: null,
-            updated_at:
-              new Date().toISOString()
-          },
-          {
-            onConflict: "email"
-          }
-        );
-
-
-      // --------------------------------------------------------
-      // Link contributor to Auth user
-      // --------------------------------------------------------
-
-      if (!contributor.user_id) {
-
-        const {
-          error: contributorUpdateError
-        } = await adminSb
-          .from("contributor_allowlist")
-          .update({
-            user_id: userId,
-            registered_at:
-              new Date().toISOString(),
-            updated_at:
-              new Date().toISOString()
-          })
-          .eq("email", email);
-
-
-        if (contributorUpdateError) {
-
-          console.error(
-            "Contributor update error:",
-            contributorUpdateError
-          );
-
-          return res.status(500).json({
-            success: false,
-            error:
-              "Email verified, but contributor registration could not be completed."
-          });
-        }
+      if (registrationUpdateError) {
+        console.error("Registration verification update error:", registrationUpdateError);
+        return res.status(500).json({ success: false, error: "Email verified, but the registration could not be updated." });
       }
 
-
-      // --------------------------------------------------------
-      // Audit successful verification
-      // --------------------------------------------------------
-
-      const {
-        error: auditError
-      } = await adminSb
-        .from("audit_log")
-        .insert({
-          actor_id: userId,
-          action:
-            "contributor_otp_verified",
-          target_email: email,
-          target_id: userId,
-          details: {
-            verified: true
-          }
-        });
-
-
-      if (auditError) {
-        console.error(
-          "OTP verification audit error:",
-          auditError
-        );
-      }
-
-
-      // --------------------------------------------------------
-      // Create short-lived registration token
-      // --------------------------------------------------------
-
-      const registrationToken =
-        createRegistrationToken(
-          email,
-          userId
-        );
-
-
-      // --------------------------------------------------------
-      // Return registration token
-      // --------------------------------------------------------
+      await adminSb.from("audit_log").insert({ action: "contributor_otp_verified", target_email: email, target_id: registration.id, details: { verified: true, authUserId: userId } });
 
       return res.json({
         success: true,
         verified: true,
         userId,
-        registrationToken,
-        message:
-          "Email verified successfully. You can now set your password."
+        registrationToken: createRegistrationToken(email, userId),
+        message: "Email verified successfully. You can now set your password."
       });
-
-
     } catch (error) {
-
-      console.error(
-        "Verify OTP error:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        error:
-          "Something went wrong while verifying the OTP."
-      });
+      console.error("Verify OTP error:", error);
+      return res.status(500).json({ success: false, error: "Something went wrong while verifying the OTP." });
     }
   }
 );
-
-
-// ============================================================
-// CONTRIBUTOR REGISTRATION
-// STEP 3 — SET PASSWORD
-// ============================================================
 
 app.post(
   "/api/contributor/set-password",
   async (req, res) => {
-
     try {
+      if (!adminSb) return res.status(503).json({ success: false, error: "Authentication service is not configured." });
 
-      if (!adminSb) {
-        return res.status(503).json({
-          success: false,
-          error:
-            "Authentication service is not configured."
-        });
+      const registrationToken = String(req.body.registrationToken || "").trim();
+      const password = String(req.body.password || "");
+      const tokenData = verifyRegistrationToken(registrationToken);
+      if (!tokenData) return res.status(401).json({ success: false, error: "Your email verification has expired. Please verify your email again." });
+
+      if (password.length < 10) return res.status(400).json({ success: false, error: "Password must be at least 10 characters long." });
+      if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+        return res.status(400).json({ success: false, error: "Password must contain at least one uppercase letter, lowercase letter, number and special character." });
       }
 
+      const registration = await getRegistration(tokenData.email);
+      if (!registration || registration.auth_user_id !== tokenData.userId) return res.status(403).json({ success: false, error: "Registration record could not be verified." });
+      if (registration.status === "approved") return res.status(409).json({ success: false, error: "This registration is already approved. Please use Newsroom Login." });
+      if (registration.status !== "pending") return res.status(403).json({ success: false, error: "This registration is not currently eligible for account creation." });
+      if (!registration.email_verified_at) return res.status(403).json({ success: false, error: "Please verify your email before creating your password." });
 
-      // --------------------------------------------------------
-      // Read values
-      // --------------------------------------------------------
-
-      const registrationToken =
-        String(
-          req.body.registrationToken ||
-            ""
-        ).trim();
-
-      const password =
-        String(
-          req.body.password || ""
-        );
-
-
-      // --------------------------------------------------------
-      // Verify registration token
-      // --------------------------------------------------------
-
-      const tokenData =
-        verifyRegistrationToken(
-          registrationToken
-        );
-
-
-      if (!tokenData) {
-        return res.status(401).json({
-          success: false,
-          error:
-            "Your email verification has expired. Please verify your email again."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Validate password
-      // --------------------------------------------------------
-
-      if (password.length < 10) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Password must be at least 10 characters long."
-        });
-      }
-
-
-      // Require:
-      // lowercase
-      // uppercase
-      // number
-      // special character
-
-      const hasLower =
-        /[a-z]/.test(password);
-
-      const hasUpper =
-        /[A-Z]/.test(password);
-
-      const hasNumber =
-        /\d/.test(password);
-
-      const hasSpecial =
-        /[^A-Za-z0-9]/.test(
-          password
-        );
-
-
-      if (
-        !hasLower ||
-        !hasUpper ||
-        !hasNumber ||
-        !hasSpecial
-      ) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Password must contain at least one uppercase letter, lowercase letter, number and special character."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Verify contributor still exists and is active
-      // --------------------------------------------------------
-
-      const contributor =
-        await getContributor(
-          tokenData.email
-        );
-
-
-      if (!contributor) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "Contributor account not found."
-        });
-      }
-
-
-      if (contributor.active !== true) {
-        return res.status(403).json({
-          success: false,
-          error:
-            "Contributor account is inactive."
-        });
-      }
-
-
-      // --------------------------------------------------------
-      // Set password using Supabase Admin API
-      // --------------------------------------------------------
-
-      const {
-        data: updatedUser,
-        error: passwordError
-      } = await adminSb.auth.admin.updateUserById(
-        tokenData.userId,
-        {
-          password
-        }
-      );
-
-
+      const { error: passwordError } = await adminSb.auth.admin.updateUserById(tokenData.userId, { password });
       if (passwordError) {
-
-        console.error(
-          "Password update error:",
-          passwordError
-        );
-
-        return res.status(500).json({
-          success: false,
-          error:
-            "Unable to set password. Please try again."
-        });
+        console.error("Password update error:", passwordError);
+        return res.status(500).json({ success: false, error: "Unable to set password. Please try again." });
       }
 
+      const now = new Date().toISOString();
+      await adminSb.from("contributor_registrations").update({ password_created_at: now, registered_at: registration.registered_at || now, updated_at: now }).eq("id", registration.id);
+      await adminSb.from("audit_log").insert({ actor_id: tokenData.userId, action: "contributor_password_created", target_email: tokenData.email, target_id: registration.id, details: { passwordCreated: true } });
 
-      // --------------------------------------------------------
-      // Update contributor record
-      // --------------------------------------------------------
-
-      await adminSb
-        .from("contributor_allowlist")
-        .update({
-          user_id:
-            tokenData.userId,
-          registered_at:
-            contributor.registered_at ||
-            new Date().toISOString(),
-          updated_at:
-            new Date().toISOString()
-        })
-        .eq(
-          "email",
-          tokenData.email
-        );
-
-
-      // --------------------------------------------------------
-      // Audit
-      // --------------------------------------------------------
-
-      await adminSb
-        .from("audit_log")
-        .insert({
-          actor_id:
-            tokenData.userId,
-          action:
-            "contributor_password_created",
-          target_email:
-            tokenData.email,
-          target_id:
-            tokenData.userId,
-          details: {
-            passwordCreated: true
-          }
-        });
-
-
-      return res.json({
-        success: true,
-        message:
-          "Password created successfully. You can now log in."
-      });
-
-
+      return res.json({ success: true, message: "Registration completed successfully. Your account is now awaiting CP Times administrator approval." });
     } catch (error) {
-
-      console.error(
-        "Set password error:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        error:
-          "Something went wrong while setting your password."
-      });
+      console.error("Set password error:", error);
+      return res.status(500).json({ success: false, error: "Something went wrong while setting your password." });
     }
   }
 );
 
+// ============================================================
+// ADMIN — REPORTER APPROVAL WORKFLOW
+// ============================================================
+
+app.get("/api/admin/contributors", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  try {
+    const status = String(req.query.status || "").trim();
+    let query = adminSb.from("contributor_registrations").select("*").order("created_at", { ascending: false });
+    if (status) query = query.eq("status", status);
+    const { data, error } = await query;
+    if (error) throw error;
+    return res.json({ success: true, contributors: data || [] });
+  } catch (error) {
+    console.error("Admin contributor list error:", error);
+    return res.status(500).json({ success: false, error: "Unable to load reporter registrations." });
+  }
+});
+
+app.post("/api/admin/contributors/:id/approve", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  try {
+    const id = String(req.params.id || "");
+    const { data: registration, error: readError } = await adminSb.from("contributor_registrations").select("*").eq("id", id).maybeSingle();
+    if (readError) throw readError;
+    if (!registration) return res.status(404).json({ success: false, error: "Reporter registration not found." });
+    if (registration.status === "approved") return res.json({ success: true, message: "Reporter is already approved." });
+    if (!registration.auth_user_id || !registration.email_verified_at || !registration.password_created_at) {
+      return res.status(400).json({ success: false, error: "The reporter must complete OTP verification and create a password before approval." });
+    }
+    if (!["pending"].includes(registration.status)) return res.status(400).json({ success: false, error: `Registration is currently ${registration.status}.` });
+
+    const { data: existingProfile, error: profileReadError } = await adminSb.from("profiles").select("id, role").eq("id", registration.auth_user_id).maybeSingle();
+    if (profileReadError) throw profileReadError;
+    if (!existingProfile) {
+      const { error: profileInsertError } = await adminSb.from("profiles").insert({ id: registration.auth_user_id, full_name: registration.full_name, role: "journalist" });
+      if (profileInsertError) throw profileInsertError;
+    } else {
+      const { error: profileUpdateError } = await adminSb.from("profiles").update({ full_name: registration.full_name }).eq("id", registration.auth_user_id);
+      if (profileUpdateError) throw profileUpdateError;
+    }
+
+    const now = new Date().toISOString();
+    const { error: updateError } = await adminSb.from("contributor_registrations").update({ status: "approved", approved_at: now, approved_by: auth.user.id, updated_at: now }).eq("id", id);
+    if (updateError) throw updateError;
+    await adminSb.from("audit_log").insert({ actor_id: auth.user.id, action: "contributor_approved", target_email: registration.email, target_id: id, details: { authUserId: registration.auth_user_id } });
+    return res.json({ success: true, message: "Reporter approved successfully." });
+  } catch (error) {
+    console.error("Admin contributor approval error:", error);
+    return res.status(500).json({ success: false, error: "Unable to approve reporter." });
+  }
+});
+
+app.post("/api/admin/contributors/:id/reject", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  try {
+    const id = String(req.params.id || "");
+    const reason = String(req.body.reason || "").trim().slice(0, 500);
+    const { data: registration, error: readError } = await adminSb.from("contributor_registrations").select("email,status").eq("id", id).maybeSingle();
+    if (readError) throw readError;
+    if (!registration) return res.status(404).json({ success: false, error: "Reporter registration not found." });
+    if (registration.status === "approved") return res.status(400).json({ success: false, error: "An approved reporter cannot be rejected from this screen." });
+    const now = new Date().toISOString();
+    const { error } = await adminSb.from("contributor_registrations").update({ status: "rejected", rejection_reason: reason || null, updated_at: now }).eq("id", id);
+    if (error) throw error;
+    await adminSb.from("audit_log").insert({ actor_id: auth.user.id, action: "contributor_rejected", target_email: registration.email, target_id: id, details: { reason: reason || null } });
+    return res.json({ success: true, message: "Reporter registration rejected." });
+  } catch (error) {
+    console.error("Admin contributor rejection error:", error);
+    return res.status(500).json({ success: false, error: "Unable to reject reporter." });
+  }
+});
+
+app.post("/api/admin/contributors/:id/restore", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  try {
+    const id = String(req.params.id || "");
+    const { data: registration, error: readError } = await adminSb.from("contributor_registrations").select("*").eq("id", id).maybeSingle();
+    if (readError) throw readError;
+    if (!registration) return res.status(404).json({ success: false, error: "Reporter registration not found." });
+    const now = new Date().toISOString();
+    const { error } = await adminSb.from("contributor_registrations").update({ status: "pending", rejection_reason: null, updated_at: now }).eq("id", id);
+    if (error) throw error;
+    await adminSb.from("audit_log").insert({ actor_id: auth.user.id, action: "contributor_restored_to_pending", target_email: registration.email, target_id: id });
+    return res.json({ success: true, message: "Reporter registration moved back to pending." });
+  } catch (error) {
+    console.error("Admin contributor restore error:", error);
+    return res.status(500).json({ success: false, error: "Unable to restore reporter registration." });
+  }
+});
 
 // ============================================================
 // EXISTING CP TIMES APIs
