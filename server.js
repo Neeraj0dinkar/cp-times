@@ -634,6 +634,83 @@ app.post(
 );
 
 // ============================================================
+// ADMIN — ARTICLE MANAGEMENT
+// ============================================================
+// Article writes are performed server-side after requireAdmin() validation.
+// This avoids relying on a browser Supabase session for RLS INSERT/UPDATE.
+
+app.post("/api/admin/articles", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+
+  try {
+    const title = String(req.body.title || "").trim();
+    const category = String(req.body.category || "").trim();
+    const excerpt = String(req.body.excerpt || "").trim();
+    const body = String(req.body.body || "").trim();
+    const authorName = String(req.body.author_name || "CP Times Desk").trim() || "CP Times Desk";
+    const status = String(req.body.status || "draft").trim();
+    const featured = Boolean(req.body.featured);
+    const requestedId = String(req.body.id || "").trim();
+    const imageUrl = req.body.image_url ? String(req.body.image_url).trim() : null;
+
+    if (!title || !body) {
+      return res.status(400).json({ success: false, error: "Headline and Article Body are required." });
+    }
+
+    const allowedStatuses = ["draft", "review", "published", "archived"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: "Invalid article status." });
+    }
+
+    let slug = title
+      .normalize("NFC")
+      .trim()
+      .replace(/[^\\p{L}\\p{N}\\s-]+/gu, " ")
+      .replace(/\\s+/gu, "-")
+      .replace(/^-+|-+$/gu, "")
+      .slice(0, 120);
+
+    if (!slug) slug = `story-${Date.now()}`;
+
+    let existingBySlug = await adminSb.from("articles").select("id").eq("slug", slug).maybeSingle();
+    if (existingBySlug.error) throw existingBySlug.error;
+    if (existingBySlug.data && existingBySlug.data.id !== requestedId) {
+      slug = `${slug}-${Date.now()}`;
+    }
+
+    const row = {
+      title,
+      slug,
+      category,
+      excerpt,
+      body,
+      author_name: authorName,
+      status,
+      featured,
+      updated_by: auth.user.id
+    };
+
+    if (imageUrl) row.image_url = imageUrl;
+    if (status === "published") row.published_at = new Date().toISOString();
+
+    let result;
+    if (requestedId) {
+      result = await adminSb.from("articles").update(row).eq("id", requestedId).select().single();
+    } else {
+      result = await adminSb.from("articles").insert({ ...row, created_by: auth.user.id }).select().single();
+    }
+
+    if (result.error) throw result.error;
+
+    return res.json({ success: true, article: result.data });
+  } catch (error) {
+    console.error("Admin article save error:", error);
+    return res.status(500).json({ success: false, error: error.message || "Unable to save article." });
+  }
+});
+
+// ============================================================
 // ADMIN — REPORTER APPROVAL WORKFLOW
 // ============================================================
 
