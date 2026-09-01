@@ -139,7 +139,18 @@ const categorySlug = (x) =>
   String(x || "")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, "-");
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+// Build a safe URL slug for older articles whose database slug is blank/invalid.
+const articleUrlKey = (article) => {
+  const stored = String(article?.slug || "").trim();
+  if (stored && stored !== "%20") return encodeURIComponent(stored);
+  const generated = categorySlug(article?.title);
+  return generated || `id-${article?.id || "unknown"}`;
+};
 
 
 const bodyHtml = (x) =>
@@ -155,14 +166,47 @@ const bodyHtml = (x) =>
 async function published(slug) {
   if (!sb) return null;
 
-  const { data } = await sb
-    .from("articles")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  const requested = decodeURIComponent(String(slug || "")).trim();
 
-  return data || null;
+  // Normal path: the article has a valid stored slug.
+  if (requested && requested !== "%20") {
+    const { data } = await sb
+      .from("articles")
+      .select("*")
+      .eq("slug", requested)
+      .eq("status", "published")
+      .maybeSingle();
+
+    if (data) return data;
+
+    // Backward-compatible path for older articles with missing/invalid slugs:
+    // allow /category/id-<uuid> URLs without requiring a database migration.
+    if (requested.startsWith("id-")) {
+      const id = requested.slice(3);
+      const byId = await sb
+        .from("articles")
+        .select("*")
+        .eq("id", id)
+        .eq("status", "published")
+        .maybeSingle();
+      if (byId.data) return byId.data;
+    }
+
+    // Also support generated title slugs for legacy rows.
+    const { data: candidates } = await sb
+      .from("articles")
+      .select("*")
+      .eq("status", "published")
+      .limit(500);
+    const match = (candidates || []).find(a => {
+      const stored = String(a.slug || "").trim();
+      return stored && categorySlug(stored) === requested ||
+        (!stored && categorySlug(a.title) === requested);
+    });
+    if (match) return match;
+  }
+
+  return null;
 }
 
 
@@ -874,7 +918,13 @@ app.get(
     }
 
 
-    res.json(data || []);
+    const result = (data || []).map(article => ({
+      ...article,
+      slug: String(article.slug || "").trim() || null,
+      url_key: articleUrlKey(article)
+    }));
+
+    res.json(result);
   }
 );
 
@@ -1253,9 +1303,7 @@ app.get(
     const canonical =
       `${SITE}/${categorySlug(
         article.category
-      )}/${encodeURIComponent(
-        article.slug
-      )}`;
+      )}/${articleUrlKey(article)}`;
 
 
     const ld = {
