@@ -168,45 +168,58 @@ async function published(slug) {
 
   const requested = decodeURIComponent(String(slug || "")).trim();
 
-  // Normal path: the article has a valid stored slug.
-  if (requested && requested !== "%20") {
-    const { data } = await sb
+  if (!requested || requested === "%20") {
+    return null;
+  }
+
+  // 1. Try finding by slug
+  const { data: bySlug } = await sb
+    .from("articles")
+    .select("*")
+    .eq("slug", requested)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (bySlug) return bySlug;
+
+  // 2. Support legacy URLs such as /india/id-11
+  // and old URLs such as /india/11
+  let articleId = null;
+
+  if (requested.startsWith("id-")) {
+    articleId = requested.slice(3);
+  } else if (/^\d+$/.test(requested)) {
+    articleId = requested;
+  }
+
+  if (articleId) {
+    const { data: byId } = await sb
       .from("articles")
       .select("*")
-      .eq("slug", requested)
+      .eq("id", articleId)
       .eq("status", "published")
       .maybeSingle();
 
-    if (data) return data;
-
-    // Backward-compatible path for older articles with missing/invalid slugs:
-    // allow /category/id-<uuid> URLs without requiring a database migration.
-    if (requested.startsWith("id-")) {
-      const id = requested.slice(3);
-      const byId = await sb
-        .from("articles")
-        .select("*")
-        .eq("id", id)
-        .eq("status", "published")
-        .maybeSingle();
-      if (byId.data) return byId.data;
-    }
-
-    // Also support generated title slugs for legacy rows.
-    const { data: candidates } = await sb
-      .from("articles")
-      .select("*")
-      .eq("status", "published")
-      .limit(500);
-    const match = (candidates || []).find(a => {
-      const stored = String(a.slug || "").trim();
-      return stored && categorySlug(stored) === requested ||
-        (!stored && categorySlug(a.title) === requested);
-    });
-    if (match) return match;
+    if (byId) return byId;
   }
 
-  return null;
+  // 3. Support generated title slugs for legacy articles
+  const { data: candidates } = await sb
+    .from("articles")
+    .select("*")
+    .eq("status", "published")
+    .limit(500);
+
+  const match = (candidates || []).find((article) => {
+    const storedSlug = String(article.slug || "").trim();
+
+    return (
+      (storedSlug && categorySlug(storedSlug) === requested) ||
+      (!storedSlug && categorySlug(article.title) === requested)
+    );
+  });
+
+  return match || null;
 }
 
 
