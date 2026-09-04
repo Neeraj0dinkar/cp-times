@@ -169,74 +169,94 @@ async function published(articleKey) {
   const requested = decodeURIComponent(
     String(articleKey || "")
   ).trim();
-  console.log("ARTICLE LOOKUP REQUEST:", requested);
 
   if (!requested || requested === "%20") {
     return null;
   }
 
-  console.log("Looking for article:", requested);
+  console.log("ARTICLE LOOKUP REQUEST:", requested);
 
   // ------------------------------------------------
-  // 1. Find by exact slug WITHOUT status restriction
+  // Build possible variations of the article key
   // ------------------------------------------------
-  const { data: bySlug, error: slugError } = await sb
-    .from("articles")
-    .select("*")
-    .eq("slug", requested)
-    .maybeSingle();
 
-    console.log("SLUG LOOKUP RESULT:", {
-      requested,
-      article: bySlug,
-      error: slugError
-    });
+  const possibleKeys = [
+    requested
+  ];
 
-  if (slugError) {
-    console.error(
-      "Slug lookup error:",
-      slugError.message
-    );
+  // If URL starts with "-", also try without "-"
+  if (requested.startsWith("-")) {
+    possibleKeys.push(requested.substring(1));
   }
 
-  if (bySlug) {
-    console.log(
-      "Article found by slug:",
-      bySlug.id,
-      bySlug.slug,
-      "Status:",
-      bySlug.status
-    );
+  // If numeric without "-", also try with "-"
+  if (/^\d+$/.test(requested)) {
+    possibleKeys.push(`-${requested}`);
+  }
 
-    // Allow published articles (case-insensitive)
-    if (
-      String(bySlug.status || "")
-        .trim()
-        .toLowerCase() === "published"
-    ) {
-      return bySlug;
+  console.log("TRYING ARTICLE KEYS:", possibleKeys);
+
+  // ------------------------------------------------
+  // 1. Try finding article by slug
+  // ------------------------------------------------
+
+  for (const key of possibleKeys) {
+
+    const { data: bySlug, error: slugError } = await sb
+      .from("articles")
+      .select("*")
+      .eq("slug", key)
+      .maybeSingle();
+
+    if (slugError) {
+      console.error(
+        "SLUG LOOKUP ERROR:",
+        slugError.message
+      );
     }
 
-    console.log(
-      "Article exists but is not published:",
-      bySlug.status
-    );
+    if (bySlug) {
 
-    return null;
+      console.log(
+        "ARTICLE FOUND BY SLUG:",
+        {
+          id: bySlug.id,
+          slug: bySlug.slug,
+          status: bySlug.status
+        }
+      );
+
+      if (
+        String(bySlug.status || "")
+          .trim()
+          .toLowerCase() === "published"
+      ) {
+        return bySlug;
+      }
+
+      console.log(
+        "ARTICLE FOUND BUT NOT PUBLISHED:",
+        bySlug.status
+      );
+    }
   }
 
   // ------------------------------------------------
-  // 2. Support id-123 and numeric IDs
+  // 2. Support ID URLs
   // ------------------------------------------------
+
   let articleId = null;
 
-  if (requested.startsWith("id-")) {
-    articleId = requested.slice(3);
-  } else if (/^\d+$/.test(requested)) {
-    articleId = requested;
+  const cleanRequested = requested.replace(/^-/, "");
+
+  if (cleanRequested.startsWith("id-")) {
+    articleId = cleanRequested.slice(3);
+  } else if (/^\d+$/.test(cleanRequested)) {
+    articleId = cleanRequested;
   }
 
   if (articleId) {
+
     const { data: byId, error: idError } = await sb
       .from("articles")
       .select("*")
@@ -245,37 +265,46 @@ async function published(articleKey) {
 
     if (idError) {
       console.error(
-        "ID lookup error:",
+        "ID LOOKUP ERROR:",
         idError.message
       );
     }
 
-    if (
-      byId &&
-      String(byId.status || "")
-        .trim()
-        .toLowerCase() === "published"
-    ) {
+    if (byId) {
+
       console.log(
-        "Article found by ID:",
-        byId.id
+        "ARTICLE FOUND BY ID:",
+        {
+          id: byId.id,
+          slug: byId.slug,
+          status: byId.status
+        }
       );
 
-      return byId;
+      if (
+        String(byId.status || "")
+          .trim()
+          .toLowerCase() === "published"
+      ) {
+        return byId;
+      }
     }
   }
 
   // ------------------------------------------------
-  // 3. Fallback: generated title slug
+  // 3. Fallback search through published articles
   // ------------------------------------------------
-  const { data: candidates, error: candidatesError } = await sb
-    .from("articles")
-    .select("*")
-    .limit(500);
+
+  const { data: candidates, error: candidatesError } =
+    await sb
+      .from("articles")
+      .select("*")
+      .eq("status", "published")
+      .limit(1000);
 
   if (candidatesError) {
     console.error(
-      "Candidate lookup error:",
+      "CANDIDATE LOOKUP ERROR:",
       candidatesError.message
     );
 
@@ -283,39 +312,43 @@ async function published(articleKey) {
   }
 
   const match = (candidates || []).find((article) => {
-    const isPublished =
-      String(article.status || "")
-        .trim()
-        .toLowerCase() === "published";
-
-    if (!isPublished) return false;
 
     const storedSlug = String(
       article.slug || ""
     ).trim();
 
-    return (
-      (storedSlug &&
-        categorySlug(storedSlug) === requested) ||
+    const generatedTitleSlug =
+      categorySlug(article.title);
 
-      (!storedSlug &&
-        categorySlug(article.title) === requested)
+    return (
+      possibleKeys.includes(storedSlug) ||
+      possibleKeys.includes(
+        categorySlug(storedSlug)
+      ) ||
+      possibleKeys.includes(
+        generatedTitleSlug
+      )
     );
   });
 
   if (match) {
     console.log(
-      "Article found by fallback:",
-      match.id
+      "ARTICLE FOUND BY FALLBACK:",
+      {
+        id: match.id,
+        slug: match.slug
+      }
     );
-  } else {
-    console.log(
-      "Article NOT found:",
-      requested
-    );
+
+    return match;
   }
 
-  return match || null;
+  console.log(
+    "ARTICLE NOT FOUND AFTER ALL LOOKUPS:",
+    requested
+  );
+
+  return null;
 }
 
 // ============================================================
