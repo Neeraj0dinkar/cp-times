@@ -185,7 +185,7 @@ async function published(articleKey) {
     .select("*")
     .eq("slug", requested)
     .maybeSingle();
-    
+
     console.log("SLUG LOOKUP RESULT:", {
       requested,
       article: bySlug,
@@ -1393,8 +1393,29 @@ app.get(
 
     // The regex has two unnamed capture groups: category (params[0]) and article key (params[1]).
     // Using params[2] makes every SEO article lookup receive undefined and return 404.
+    const category = String(req.params[0] || "").trim();
     const articleKey = String(req.params[1] || "").trim();
+
+    console.log("=================================");
+    console.log("ARTICLE PAGE REQUEST");
+    console.log("Category:", category);
+    console.log("Article Key:", articleKey);
+
     const article = await published(articleKey);
+
+    console.log(
+      "ARTICLE RESULT:",
+      article
+        ? {
+            id: article.id,
+            slug: article.slug,
+            status: article.status,
+            title: article.title
+          }
+        : null
+    );
+
+    console.log("=================================");
 
 
     if (!article) {
