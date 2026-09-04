@@ -1228,7 +1228,7 @@ app.get(
       } = await sb
         .from("articles")
         .select(
-          "slug,category"
+          "id,slug,category"
         )
         .eq(
           "status",
@@ -1243,9 +1243,7 @@ app.get(
           urls.push(
             `${SITE}/${categorySlug(
               article.category
-            )}/${encodeURIComponent(
-              article.slug
-            )}`
+            )}/${articleUrlKey(article)}`
           );
 
         }
@@ -1285,10 +1283,10 @@ app.get(
   /^\/(india|uttar-pradesh|world|business|technology|sports|entertainment|politics)\/([^/]+)$/,
   async (req, res) => {
 
-    const article =
-      await published(
-        req.params[2]
-      );
+    // The regex has two unnamed capture groups: category (params[0]) and article key (params[1]).
+    // Using params[2] makes every SEO article lookup receive undefined and return 404.
+    const articleKey = String(req.params[1] || "").trim();
+    const article = await published(articleKey);
 
 
     if (!article) {
