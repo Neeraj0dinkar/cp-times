@@ -1,11 +1,31 @@
 const express = require("express");
 const path = require("path");
+const OpenAI = require("openai");
+
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    })
+  : null;
 const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
-
+const ZODIAC_SIGNS = [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces"
+];
 const app = express();
 
 // Render runs the app behind a trusted reverse proxy. Trust the first proxy
@@ -1266,6 +1286,263 @@ app.get(
   }
 );
 
+// ============================================================
+// AUTOMATIC AI HOROSCOPE GENERATOR
+// ============================================================
+
+function getIndiaMonthKey() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit"
+  }).formatToParts(new Date());
+
+  const year = parts.find(
+    (part) => part.type === "year"
+  ).value;
+
+  const month = parts.find(
+    (part) => part.type === "month"
+  ).value;
+
+  return `${year}-${month}-01`;
+}
+
+async function generateMonthlyHoroscopes() {
+
+  if (!openai) {
+    throw new Error(
+      "OPENAI_API_KEY is not configured"
+    );
+  }
+
+  if (!sb) {
+    throw new Error(
+      "Supabase is not configured"
+    );
+  }
+
+
+  const monthKey = getIndiaMonthKey();
+
+
+  // Check if horoscope already exists for this month
+  const {
+    data: existing,
+    error: checkError
+  } = await sb
+    .from("monthly_horoscopes")
+    .select("id")
+    .eq("month_key", monthKey)
+    .limit(1);
+
+
+  if (checkError) {
+    throw new Error(
+      `Database check failed: ${checkError.message}`
+    );
+  }
+
+
+  // Do not create duplicates
+  if (existing && existing.length > 0) {
+
+    console.log(
+      `Horoscopes already exist for ${monthKey}`
+    );
+
+    return {
+      success: true,
+      message: "Horoscopes already exist for this month",
+      monthKey
+    };
+  }
+
+
+  console.log(
+    `Generating horoscopes for ${monthKey}`
+  );
+
+
+  const monthName = new Date(
+    `${monthKey}T00:00:00+05:30`
+  ).toLocaleString(
+    "en-IN",
+    {
+      month: "long",
+      year: "numeric",
+      timeZone: "Asia/Kolkata"
+    }
+  );
+
+
+  const prompt = `
+Generate monthly horoscope content for ${monthName}.
+
+Create one horoscope for each of these 12 zodiac signs:
+
+${ZODIAC_SIGNS.join(", ")}
+
+Requirements:
+- Write in English.
+- Each horoscope should be approximately 80 to 120 words.
+- Use a positive, balanced and engaging tone.
+- Cover career, relationships, finances, health or personal growth naturally.
+- Do not make guaranteed predictions.
+- Make each zodiac sign distinct.
+- Return ONLY valid JSON.
+
+Use exactly this JSON structure:
+
+{
+  "Aries": "horoscope text",
+  "Taurus": "horoscope text",
+  "Gemini": "horoscope text",
+  "Cancer": "horoscope text",
+  "Leo": "horoscope text",
+  "Virgo": "horoscope text",
+  "Libra": "horoscope text",
+  "Scorpio": "horoscope text",
+  "Sagittarius": "horoscope text",
+  "Capricorn": "horoscope text",
+  "Aquarius": "horoscope text",
+  "Pisces": "horoscope text"
+}
+`;
+
+
+  const response = await openai.responses.create({
+    model: "gpt-4.1-mini",
+    input: prompt
+  });
+
+
+  let generated;
+
+  try {
+
+    generated = JSON.parse(
+      response.output_text
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Invalid AI response:",
+      response.output_text
+    );
+
+    throw new Error(
+      "AI returned invalid horoscope JSON"
+    );
+  }
+
+
+  const records = ZODIAC_SIGNS.map(
+    (sign) => ({
+
+      month_key: monthKey,
+
+      sign,
+
+      content: String(
+        generated[sign] || ""
+      ).trim(),
+
+      language: "English",
+
+      status: "published"
+
+    })
+  );
+
+
+  const invalid = records.filter(
+    (record) => !record.content
+  );
+
+
+  if (invalid.length > 0) {
+
+    throw new Error(
+      `Missing horoscope content for: ${invalid
+        .map((x) => x.sign)
+        .join(", ")}`
+    );
+  }
+
+
+  const {
+    error: insertError
+  } = await sb
+    .from("monthly_horoscopes")
+    .insert(records);
+
+
+  if (insertError) {
+
+    throw new Error(
+      `Database insert failed: ${insertError.message}`
+    );
+  }
+
+
+  console.log(
+    `Successfully generated ${records.length} horoscopes for ${monthKey}`
+  );
+
+
+  return {
+    success: true,
+    message: "Horoscopes generated successfully",
+    monthKey,
+    count: records.length
+  };
+
+
+}
+
+// NEW API ROUTE
+app.post(
+  "/api/auto-generate-horoscope",
+  async (req, res) => {
+
+    try {
+
+      const secret =
+        req.headers["x-cron-secret"];
+
+      if (
+        !process.env.CRON_SECRET ||
+        secret !== process.env.CRON_SECRET
+      ) {
+        return res.status(401).json({
+          error: "Unauthorized"
+        });
+      }
+
+
+      const result =
+        await generateMonthlyHoroscopes();
+
+
+      res.json(result);
+
+    } catch (error) {
+
+      console.error(
+        "HOROSCOPE GENERATION ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        error: error.message
+      });
+
+    }
+
+  }
+);
 
 // ------------------------------------------------------------
 // HOROSCOPE
