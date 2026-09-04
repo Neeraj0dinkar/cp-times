@@ -164,38 +164,37 @@ const bodyHtml = (x) =>
 
 
 async function published(articleKey) {
-  if (!sb) {
-    console.error("Supabase client is not available");
-    return null;
-  }
+  if (!sb) return null;
 
   const requested = decodeURIComponent(
     String(articleKey || "")
   ).trim();
-
-  console.log("Looking for article:", requested);
+  console.log("ARTICLE LOOKUP REQUEST:", requested);
 
   if (!requested || requested === "%20") {
     return null;
   }
 
-  // --------------------------------------------------
-  // 1. First try exact slug match
-  // --------------------------------------------------
+  console.log("Looking for article:", requested);
 
-  const {
-    data: bySlug,
-    error: slugError
-  } = await sb
+  // ------------------------------------------------
+  // 1. Find by exact slug WITHOUT status restriction
+  // ------------------------------------------------
+  const { data: bySlug, error: slugError } = await sb
     .from("articles")
     .select("*")
     .eq("slug", requested)
-    .eq("status", "published")
     .maybeSingle();
+    
+    console.log("SLUG LOOKUP RESULT:", {
+      requested,
+      article: bySlug,
+      error: slugError
+    });
 
   if (slugError) {
     console.error(
-      "Error searching article by slug:",
+      "Slug lookup error:",
       slugError.message
     );
   }
@@ -204,46 +203,59 @@ async function published(articleKey) {
     console.log(
       "Article found by slug:",
       bySlug.id,
-      bySlug.slug
+      bySlug.slug,
+      "Status:",
+      bySlug.status
     );
 
-    return bySlug;
+    // Allow published articles (case-insensitive)
+    if (
+      String(bySlug.status || "")
+        .trim()
+        .toLowerCase() === "published"
+    ) {
+      return bySlug;
+    }
+
+    console.log(
+      "Article exists but is not published:",
+      bySlug.status
+    );
+
+    return null;
   }
 
-  // --------------------------------------------------
-  // 2. Support URLs like:
-  // /india/id-11
-  // /india/11
-  // --------------------------------------------------
-
+  // ------------------------------------------------
+  // 2. Support id-123 and numeric IDs
+  // ------------------------------------------------
   let articleId = null;
 
   if (requested.startsWith("id-")) {
-    articleId = requested.substring(3);
+    articleId = requested.slice(3);
   } else if (/^\d+$/.test(requested)) {
     articleId = requested;
   }
 
   if (articleId) {
-
-    const {
-      data: byId,
-      error: idError
-    } = await sb
+    const { data: byId, error: idError } = await sb
       .from("articles")
       .select("*")
       .eq("id", articleId)
-      .eq("status", "published")
       .maybeSingle();
 
     if (idError) {
       console.error(
-        "Error searching article by ID:",
+        "ID lookup error:",
         idError.message
       );
     }
 
-    if (byId) {
+    if (
+      byId &&
+      String(byId.status || "")
+        .trim()
+        .toLowerCase() === "published"
+    ) {
       console.log(
         "Article found by ID:",
         byId.id
@@ -253,75 +265,43 @@ async function published(articleKey) {
     }
   }
 
-  // --------------------------------------------------
-  // 3. Try slug without status restriction
-  // This helps identify status-related issues
-  // --------------------------------------------------
-
-  const {
-    data: articleWithoutStatus,
-    error: statusError
-  } = await sb
+  // ------------------------------------------------
+  // 3. Fallback: generated title slug
+  // ------------------------------------------------
+  const { data: candidates, error: candidatesError } = await sb
     .from("articles")
     .select("*")
-    .eq("slug", requested)
-    .maybeSingle();
-
-  if (statusError) {
-    console.error(
-      "Error checking article without status:",
-      statusError.message
-    );
-  }
-
-  if (articleWithoutStatus) {
-
-    console.log(
-      "Article exists but status is:",
-      articleWithoutStatus.status
-    );
-
-    return null;
-  }
-
-  // --------------------------------------------------
-  // 4. Support generated title slugs
-  // --------------------------------------------------
-
-  const {
-    data: candidates,
-    error: candidatesError
-  } = await sb
-    .from("articles")
-    .select("*")
-    .eq("status", "published")
     .limit(500);
 
   if (candidatesError) {
     console.error(
-      "Error loading article candidates:",
+      "Candidate lookup error:",
       candidatesError.message
     );
 
     return null;
   }
 
-  const match = (candidates || []).find(
-    (article) => {
+  const match = (candidates || []).find((article) => {
+    const isPublished =
+      String(article.status || "")
+        .trim()
+        .toLowerCase() === "published";
 
-      const storedSlug = String(
-        article.slug || ""
-      ).trim();
+    if (!isPublished) return false;
 
-      return (
-        (storedSlug &&
-          categorySlug(storedSlug) === requested) ||
+    const storedSlug = String(
+      article.slug || ""
+    ).trim();
 
-        (!storedSlug &&
-          categorySlug(article.title) === requested)
-      );
-    }
-  );
+    return (
+      (storedSlug &&
+        categorySlug(storedSlug) === requested) ||
+
+      (!storedSlug &&
+        categorySlug(article.title) === requested)
+    );
+  });
 
   if (match) {
     console.log(
