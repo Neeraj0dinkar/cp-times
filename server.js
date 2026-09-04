@@ -163,65 +163,180 @@ const bodyHtml = (x) =>
     .join("");
 
 
-async function published(slug) {
-  if (!sb) return null;
+async function published(articleKey) {
+  if (!sb) {
+    console.error("Supabase client is not available");
+    return null;
+  }
 
-  const requested = decodeURIComponent(String(slug || "")).trim();
+  const requested = decodeURIComponent(
+    String(articleKey || "")
+  ).trim();
+
+  console.log("Looking for article:", requested);
 
   if (!requested || requested === "%20") {
     return null;
   }
 
-  // 1. Try finding by slug
-  const { data: bySlug } = await sb
+  // --------------------------------------------------
+  // 1. First try exact slug match
+  // --------------------------------------------------
+
+  const {
+    data: bySlug,
+    error: slugError
+  } = await sb
     .from("articles")
     .select("*")
     .eq("slug", requested)
     .eq("status", "published")
     .maybeSingle();
 
-  if (bySlug) return bySlug;
+  if (slugError) {
+    console.error(
+      "Error searching article by slug:",
+      slugError.message
+    );
+  }
 
-  // 2. Support legacy URLs such as /india/id-11
-  // and old URLs such as /india/11
+  if (bySlug) {
+    console.log(
+      "Article found by slug:",
+      bySlug.id,
+      bySlug.slug
+    );
+
+    return bySlug;
+  }
+
+  // --------------------------------------------------
+  // 2. Support URLs like:
+  // /india/id-11
+  // /india/11
+  // --------------------------------------------------
+
   let articleId = null;
 
   if (requested.startsWith("id-")) {
-    articleId = requested.slice(3);
+    articleId = requested.substring(3);
   } else if (/^\d+$/.test(requested)) {
     articleId = requested;
   }
 
   if (articleId) {
-    const { data: byId } = await sb
+
+    const {
+      data: byId,
+      error: idError
+    } = await sb
       .from("articles")
       .select("*")
       .eq("id", articleId)
       .eq("status", "published")
       .maybeSingle();
 
-    if (byId) return byId;
+    if (idError) {
+      console.error(
+        "Error searching article by ID:",
+        idError.message
+      );
+    }
+
+    if (byId) {
+      console.log(
+        "Article found by ID:",
+        byId.id
+      );
+
+      return byId;
+    }
   }
 
-  // 3. Support generated title slugs for legacy articles
-  const { data: candidates } = await sb
+  // --------------------------------------------------
+  // 3. Try slug without status restriction
+  // This helps identify status-related issues
+  // --------------------------------------------------
+
+  const {
+    data: articleWithoutStatus,
+    error: statusError
+  } = await sb
+    .from("articles")
+    .select("*")
+    .eq("slug", requested)
+    .maybeSingle();
+
+  if (statusError) {
+    console.error(
+      "Error checking article without status:",
+      statusError.message
+    );
+  }
+
+  if (articleWithoutStatus) {
+
+    console.log(
+      "Article exists but status is:",
+      articleWithoutStatus.status
+    );
+
+    return null;
+  }
+
+  // --------------------------------------------------
+  // 4. Support generated title slugs
+  // --------------------------------------------------
+
+  const {
+    data: candidates,
+    error: candidatesError
+  } = await sb
     .from("articles")
     .select("*")
     .eq("status", "published")
     .limit(500);
 
-  const match = (candidates || []).find((article) => {
-    const storedSlug = String(article.slug || "").trim();
-
-    return (
-      (storedSlug && categorySlug(storedSlug) === requested) ||
-      (!storedSlug && categorySlug(article.title) === requested)
+  if (candidatesError) {
+    console.error(
+      "Error loading article candidates:",
+      candidatesError.message
     );
-  });
+
+    return null;
+  }
+
+  const match = (candidates || []).find(
+    (article) => {
+
+      const storedSlug = String(
+        article.slug || ""
+      ).trim();
+
+      return (
+        (storedSlug &&
+          categorySlug(storedSlug) === requested) ||
+
+        (!storedSlug &&
+          categorySlug(article.title) === requested)
+      );
+    }
+  );
+
+  if (match) {
+    console.log(
+      "Article found by fallback:",
+      match.id
+    );
+  } else {
+    console.log(
+      "Article NOT found:",
+      requested
+    );
+  }
 
   return match || null;
 }
-
 
 // ============================================================
 // CONTRIBUTOR / REPORTER HELPERS
