@@ -1421,9 +1421,17 @@ Use exactly this JSON structure:
 
   try {
 
-    generated = JSON.parse(
-      response.output_text
-    );
+    // Get AI response
+    let jsonText = response.output_text.trim();
+
+    // Remove Markdown code block if AI returns ```json ... ```
+    jsonText = jsonText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    generated = JSON.parse(jsonText);
 
   } catch (error) {
 
