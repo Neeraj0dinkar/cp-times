@@ -1278,7 +1278,7 @@ app.get(
 
     res.set(
       "Cache-Control",
-      "public, max-age=300"
+      "no-cache, no-store, must-revalidate"
     );
 
 
