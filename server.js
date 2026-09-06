@@ -1316,9 +1316,9 @@ async function generateMonthlyHoroscopes() {
     );
   }
 
-  if (!sb) {
+  if (!adminSb) {
     throw new Error(
-      "Supabase is not configured"
+      "Supabase admin client is not configured"
     );
   }
 
@@ -1330,7 +1330,7 @@ async function generateMonthlyHoroscopes() {
   const {
     data: existing,
     error: checkError
-  } = await sb
+  } = await adminSb
     .from("monthly_horoscopes")
     .select("id")
     .eq("month_key", monthKey)
@@ -1482,7 +1482,7 @@ Use exactly this JSON structure:
 
   const {
     error: insertError
-  } = await sb
+  } = await adminSb
     .from("monthly_horoscopes")
     .insert(records);
 
@@ -1560,10 +1560,10 @@ app.get(
   "/api/horoscope",
   async (req, res) => {
 
-    if (!sb) {
+    if (!adminSb) {
       return res.status(503).json({
         error:
-          "Supabase not configured"
+          "Supabase admin client not configured"
       });
     }
 
@@ -1573,16 +1573,13 @@ app.get(
         req.query.month || ""
       )
         ? `${req.query.month}-01`
-        : new Date()
-            .toISOString()
-            .slice(0, 7) +
-          "-01";
+        : getIndiaMonthKey();
 
 
     const {
       data,
       error
-    } = await sb
+    } = await adminSb
       .from("monthly_horoscopes")
       .select(
         "id,month_key,sign,content,language"
@@ -1647,7 +1644,7 @@ app.get(
     );
 
 
-    if (sb) {
+    if (adminSb) {
 
       const {
         data
