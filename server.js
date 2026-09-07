@@ -1089,6 +1089,65 @@ app.get(
   }
 );
 
+// ============================================================
+// CP TIMES NEWS SEARCH API
+// ============================================================
+
+app.get("/api/search", async (req, res) => {
+  try {
+
+    if (!adminSb) {
+      return res.status(503).json({
+        error: "Supabase admin client not configured"
+      });
+    }
+
+  const query = String(req.query.q || "").trim();
+
+    if (!query) {
+      return res.json([]);
+    }
+
+    const searchTerm = `%${query}%`;
+
+    const { data, error } = await adminSb
+      .from("articles")
+      .select(`
+        id,
+        title,
+        slug,
+        category,
+        excerpt,
+        image_url,
+        author_name,
+        published_at
+      `)
+      .eq("status", "published")
+      .or(
+        `title.ilike.${searchTerm},excerpt.ilike.${searchTerm},category.ilike.${searchTerm}`
+      )
+      .order("published_at", {
+        ascending: false
+      })
+      .limit(30);
+
+    if (error) {
+      throw error;
+    }
+
+    return res.json(data || []);
+
+  } catch (error) {
+
+    console.error("Search API error:", error);
+
+    return res.status(500).json({
+      error: "Unable to search news."
+    });
+
+  }
+});
+
 
 // ------------------------------------------------------------
 // SINGLE ARTICLE
