@@ -660,3 +660,411 @@ button:hover {
   font-weight: 600;
 
 }
+
+/* ============================================================
+   CP TIMES - PHASE 5
+   TYPOGRAPHY & MOBILE RESPONSIVENESS
+============================================================ */
+
+
+/* ============================================================
+   GLOBAL TYPOGRAPHY
+============================================================ */
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family:
+    Inter,
+    "Noto Sans Devanagari",
+    Arial,
+    sans-serif;
+
+  line-height: 1.6;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ============================================================
+   HEADINGS
+============================================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family:
+    Inter,
+    "Noto Sans Devanagari",
+    Arial,
+    sans-serif;
+
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+
+/* Main Headlines */
+
+h1 {
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-weight: 800;
+}
+
+
+/* Section Headings */
+
+h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 750;
+}
+
+
+/* Article Headlines */
+
+h3 {
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   PARAGRAPH READABILITY
+============================================================ */
+
+p {
+  line-height: 1.65;
+}
+
+
+/* Hindi Content */
+
+:lang(hi),
+.hindi,
+.hindi-text {
+  font-family:
+    "Noto Sans Devanagari",
+    Arial,
+    sans-serif;
+
+  line-height: 1.7;
+}
+
+
+/* ============================================================
+   LINKS
+============================================================ */
+
+a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+
+/* ============================================================
+   IMAGES - PREVENT MOBILE OVERFLOW
+============================================================ */
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* ============================================================
+   BETTER ARTICLE CARD TYPOGRAPHY
+============================================================ */
+
+.card h3 {
+  line-height: 1.35;
+}
+
+.card p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.card .meta {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+
+/* ============================================================
+   SIDEBAR CARDS
+============================================================ */
+
+.rail-card {
+  border-radius: 10px;
+}
+
+.rail-head {
+  font-size: 0.9rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+}
+
+.rail-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   HOROSCOPE IMPROVEMENTS
+============================================================ */
+
+.horoscope-list {
+  scrollbar-width: thin;
+}
+
+.zodiac {
+  padding: 12px 0;
+}
+
+.zodiac-head {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.zodiac p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.horoscope-note {
+  font-size: 0.72rem;
+}
+
+
+/* ============================================================
+   BETTER BUTTON EXPERIENCE
+============================================================ */
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+button {
+  min-height: 36px;
+}
+
+
+/* ============================================================
+   TABLET RESPONSIVENESS
+============================================================ */
+
+@media (max-width: 1024px) {
+
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+  }
+
+  h2 {
+    font-size: 1.7rem;
+  }
+
+}
+
+
+/* ============================================================
+   MOBILE RESPONSIVENESS
+============================================================ */
+
+@media (max-width: 768px) {
+
+
+  /* Prevent horizontal scrolling */
+
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+
+  /* General page spacing */
+
+  body {
+    font-size: 15px;
+  }
+
+
+  /* Headlines */
+
+  h1 {
+    font-size: 1.8rem;
+    line-height: 1.25;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+  }
+
+
+  /* Better paragraph readability */
+
+  p {
+    line-height: 1.65;
+  }
+
+
+  /* Cards */
+
+  .card {
+    width: 100%;
+  }
+
+
+  /* Article card headline */
+
+  .card h3 {
+    font-size: 1.05rem;
+  }
+
+
+  /* Sidebar cards */
+
+  .rail-card {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+
+  /* Horoscope */
+
+  .horoscope-card {
+    max-height: none;
+  }
+
+
+  .horoscope-list {
+    max-height: 420px;
+  }
+
+
+  .zodiac p {
+    font-size: 0.9rem;
+  }
+
+
+  /* Images */
+
+  img {
+    max-width: 100%;
+  }
+
+
+  /* Make buttons easier to tap */
+
+  button,
+  select {
+    min-height: 40px;
+  }
+
+
+}
+
+
+/* ============================================================
+   SMALL MOBILE DEVICES
+============================================================ */
+
+@media (max-width: 480px) {
+
+
+  body {
+    font-size: 14px;
+  }
+
+
+  h1 {
+    font-size: 1.55rem;
+  }
+
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+
+  h3 {
+    font-size: 1rem;
+  }
+
+
+  .card h3 {
+    font-size: 1rem;
+  }
+
+
+  .card p {
+    font-size: 0.88rem;
+  }
+
+
+  .rail-head {
+    font-size: 0.8rem;
+  }
+
+
+  .rail-label {
+    font-size: 0.65rem;
+  }
+
+
+  .zodiac p {
+    font-size: 0.85rem;
+  }
+
+}
+
+/* ============================================================
+   MOBILE NAVIGATION IMPROVEMENT
+============================================================ */
+
+@media (max-width: 768px) {
+
+  nav,
+  .nav,
+  .nav-links,
+  .menu {
+    max-width: 100%;
+  }
+
+
+  .nav-links {
+    overflow-x: auto;
+    white-space: nowrap;
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+}
