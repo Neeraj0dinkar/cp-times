@@ -4,8 +4,170 @@ html{scroll-behavior:smooth}
 body{margin:0;background:#fff;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
 a{color:inherit}.container{width:min(1400px,94vw);max-width:1400px;margin-left:auto;margin-right:auto;}
 
-.mast{height:88px;padding:10px 3%;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--red);background:#fff}
-.mast img{width:190px;height:62px;object-fit:contain}.login-link{font-weight:700;color:#333;text-decoration:none}.login-link:hover{color:var(--red)}
+/* =========================================================
+   PHASE 5 - HEADER
+========================================================= */
+
+.mast{
+  min-height:82px;
+  padding:12px 4%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:2px solid var(--red);
+  background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);
+}
+
+
+/* Logo */
+
+.mast img{
+  width:150px;
+  height:55px;
+  object-fit:contain;
+  display:block;
+}
+
+
+/* Header right side */
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+
+/* Search button */
+
+.search-trigger{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+
+  height:40px;
+  padding:0 16px;
+
+  border:1px solid #d9dde3;
+  border-radius:6px;
+
+  background:#fff;
+  color:#202938;
+
+  font-size:14px;
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:all .2s ease;
+}
+
+
+.search-trigger:hover{
+  background:var(--red);
+  color:#fff;
+  border-color:var(--red);
+  box-shadow:0 4px 12px rgba(215,25,32,.18);
+}
+
+
+.search-trigger:active{
+  transform:scale(.97);
+}
+
+
+.search-icon{
+  font-size:20px;
+  line-height:1;
+}
+
+
+.search-text{
+  font-size:13px;
+}
+
+
+/* Login button */
+
+.login-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  height:40px;
+  padding:0 18px;
+
+  border-radius:6px;
+
+  background:var(--red);
+  color:#fff;
+
+  text-decoration:none;
+
+  font-size:13px;
+  font-weight:700;
+
+  transition:all .2s ease;
+}
+
+
+.login-link:hover{
+  background:var(--red-dark);
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(215,25,32,.22);
+}
+
+
+/* =========================================================
+   PHASE 5 - MOBILE HEADER
+========================================================= */
+
+@media(max-width:700px){
+
+  .mast{
+    min-height:70px;
+    padding:10px 14px;
+  }
+
+
+  .mast img{
+    width:100px;
+    height:auto;
+  }
+
+
+  .header-actions{
+    gap:8px;
+  }
+
+
+  .search-trigger{
+    width:38px;
+    height:38px;
+    padding:0;
+  }
+
+
+  .search-text{
+    display:none;
+  }
+
+
+  .search-icon{
+    font-size:21px;
+  }
+
+
+  .login-link{
+    height:38px;
+    padding:0 11px;
+    font-size:11px;
+  }
+
+}
 
 .nav{display:flex;gap:25px;align-items:center;padding:13px 3%;border-bottom:1px solid #ddd;overflow-x:auto;white-space:nowrap;background:#fff}
 .nav a{font-weight:900;font-size:15px;text-decoration:none}.nav a:hover{color:var(--red)}
