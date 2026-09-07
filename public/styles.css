@@ -1068,3 +1068,26 @@ button {
   }
 
 }
+
+/* ============================================================
+   PHASE 5B - MOBILE HERO HEIGHT OPTIMIZATION
+============================================================ */
+
+@media (max-width: 768px) {
+
+  .hero {
+    min-height: 420px;
+    height: 420px;
+  }
+
+}
+
+
+@media (max-width: 480px) {
+
+  .hero {
+    min-height: 380px;
+    height: 380px;
+  }
+
+}
