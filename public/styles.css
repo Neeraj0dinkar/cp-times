@@ -238,7 +238,7 @@ a {
 
 
 #hero h1 {
-  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  font-size: clamp(1.8rem, 7vw, 2.5rem);
 
   max-width: 850px;
 
