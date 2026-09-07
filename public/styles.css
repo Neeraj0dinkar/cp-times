@@ -1092,28 +1092,6 @@ button {
 
 }
 
-/* =========================================================
-   CP TIMES - MOBILE HERO HEIGHT OPTIMIZATION
-   ========================================================= */
-
-@media (max-width: 768px) {
-
-  #hero {
-    height: 370px;
-    min-height: 370px;
-  }
-
-  #hero h1 {
-    font-size: 1.85rem;
-    line-height: 1.08;
-  }
-
-  #hero p {
-    font-size: 0.88rem;
-    line-height: 1.4;
-  }
-
-}
 
 /* =========================================================
    CP TIMES MOBILE HERO IMPROVEMENT
