@@ -698,7 +698,9 @@ console.log("API Results:", results);
 
     renderHoroscope(Array.isArray(h)?h:[]);
 
-    renderTrending(Array.isArray(t)?t:[]);
+    if (typeof t !== "undefined") {
+        renderTrending(Array.isArray(t) ? t : []);
+    }
     document.getElementById("nextFact").onclick=()=>{if(facts.length){factIndex=(factIndex+1)%facts.length;renderFact()}}}function renderFact(){let box=document.getElementById("funFacts");if(!facts.length){box.innerHTML="<p>No fun facts published yet.</p>";document.getElementById("nextFact").style.display="none";return}let x=facts[factIndex];box.innerHTML=`<div class="fact-category">${e(x.category)}</div><h3>${e(x.title)}</h3><p class="fact-text">${e(x.fact)}</p>${x.source?`<div class="fact-source">Source: ${e(x.source)}</div>`:""}`;const d=document.getElementById("factDots");if(d)d.innerHTML=facts.slice(0,8).map((_,i)=>`<button class="fact-dot ${i===factIndex?"active":""}" aria-label="Fact ${i+1}"></button>`).join("");if(d)d.querySelectorAll(".fact-dot").forEach((b,i)=>b.onclick=()=>{factIndex=i;renderFact()})}
     function renderHoroscope(rows){
 
