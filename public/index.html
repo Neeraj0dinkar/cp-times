@@ -1028,35 +1028,6 @@ if (newsSearchInput) {
 
 }
 
-// ============================================================
-// PHASE 5 - OPEN SEARCH PANEL
-// ============================================================
-
-const searchTrigger = document.getElementById("searchTrigger");
-
-const searchPanel = document.getElementById("searchPanel");
-
-const newsSearchInput =
-  document.getElementById("newsSearchInput");
-
-
-if (searchTrigger && searchPanel) {
-
-  searchTrigger.addEventListener("click", function () {
-
-    searchPanel.classList.add("active");
-
-    setTimeout(function () {
-
-      if (newsSearchInput) {
-        newsSearchInput.focus();
-      }
-
-    }, 100);
-
-  });
-
-}
 
 </script>
 
@@ -1100,25 +1071,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 
-  // CLOSE SEARCH PANEL
-
-  if (closeSearch) {
-
-    closeSearch.addEventListener("click", function () {
-
-      searchPanel.classList.remove("active");
-
-      if (newsSearchInput) {
-        newsSearchInput.value = "";
-      }
-
-      if (searchResults) {
-        searchResults.innerHTML = "";
-      }
-
-    });
-
-  }
 
 
   // SEARCH NEWS
