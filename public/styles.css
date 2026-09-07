@@ -2,7 +2,7 @@
 :root{--red:#d71920;--red-dark:#b51218;--ink:#121826;--muted:#6b7280;--line:#e5e7eb;--paper:#fff;--soft:#f7f7f8}
 html{scroll-behavior:smooth}
 body{margin:0;background:#fff;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
-a{color:inherit}.container{width:min(1280px,94%);margin:auto}
+a{color:inherit}.container{width:min(1400px,94vw);max-width:1400px;margin-left:auto;margin-right:auto;}
 
 .mast{height:88px;padding:10px 3%;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--red);background:#fff}
 .mast img{width:190px;height:62px;object-fit:contain}.login-link{font-weight:700;color:#333;text-decoration:none}.login-link:hover{color:var(--red)}
@@ -1354,6 +1354,101 @@ main.container {
   .news-list {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+}
+
+/* =========================================
+   CP TIMES DESKTOP LAYOUT FIX
+   ========================================= */
+
+/* Main website width */
+
+.container{
+  width: min(1400px, 94vw) !important;
+  max-width: 1400px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+
+/* Main Hero + Sidebar Layout */
+
+.top-grid{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+  gap: 24px !important;
+  align-items: start !important;
+}
+
+
+/* Hero takes available space */
+
+.hero{
+  width: 100% !important;
+  min-height: 480px !important;
+}
+
+
+/* Sidebar fixed professional width */
+
+.right-rail,
+.top-sidebar{
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+
+/* Latest news full content width */
+
+.news-section,
+.latest-news,
+#list{
+  width: 100% !important;
+}
+
+
+/* Responsive Tablet */
+
+@media(max-width:1000px){
+
+  .container{
+    width: calc(100% - 40px) !important;
+  }
+
+  .top-grid{
+    grid-template-columns: 1fr !important;
+  }
+
+  .right-rail,
+  .top-sidebar{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+}
+
+
+/* Mobile */
+
+@media(max-width:700px){
+
+  .container{
+    width: calc(100% - 24px) !important;
+  }
+
+  .top-grid{
+    grid-template-columns: 1fr !important;
+  }
+
+  .right-rail,
+  .top-sidebar{
+    display: block !important;
+  }
+
+  .hero{
+    min-height: 410px !important;
   }
 
 }
