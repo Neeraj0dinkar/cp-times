@@ -2023,3 +2023,203 @@ main.container {
   text-align:center;
   color:#6b7280;
 }
+
+/* =========================================================
+   PHASE 5 - SEARCH OVERLAY
+========================================================= */
+
+.search-panel{
+  display:none;
+  position:fixed;
+
+  top:0;
+  left:0;
+
+  width:100%;
+  height:100vh;
+
+  background:rgba(18,24,38,.60);
+
+  z-index:9999;
+
+  align-items:flex-start;
+  justify-content:center;
+
+  padding-top:110px;
+}
+
+
+/* Show search panel */
+
+.search-panel.active{
+  display:flex;
+}
+
+
+/* Search popup */
+
+.search-container{
+  width:min(720px,92%);
+  background:#fff;
+
+  border-radius:10px;
+
+  padding:45px 24px 24px;
+
+  box-shadow:0 20px 60px rgba(0,0,0,.30);
+}
+
+
+/* Search input and button row */
+
+.search-box{
+  display:flex;
+  gap:10px;
+}
+
+
+/* Search input */
+
+#newsSearchInput{
+  flex:1;
+
+  height:50px;
+
+  padding:0 16px;
+
+  border:1px solid #d9dde3;
+  border-radius:6px;
+
+  font-size:16px;
+
+  outline:none;
+}
+
+
+#newsSearchInput:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(215,25,32,.08);
+}
+
+
+/* Search button inside popup */
+
+#newsSearchButton{
+  height:50px;
+
+  padding:0 24px;
+
+  border:none;
+  border-radius:6px;
+
+  background:var(--red);
+  color:#fff;
+
+  font-size:14px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:all .2s ease;
+}
+
+
+#newsSearchButton:hover{
+  background:var(--red-dark);
+}
+
+
+/* Search results */
+
+.search-results{
+  margin-top:18px;
+
+  max-height:400px;
+  overflow-y:auto;
+}
+
+@media(max-width:700px){
+
+  .search-panel{
+    padding-top:80px;
+  }
+
+
+  .search-container{
+    width:94%;
+    padding:16px;
+  }
+
+
+  .search-box{
+    flex-direction:column;
+  }
+
+
+  #newsSearchButton{
+    width:100%;
+  }
+
+}
+
+.search-container{
+  position:relative;
+}
+
+
+.search-close{
+  position:absolute;
+
+  top:6px;
+  right:10px;
+
+  width:32px;
+  height:32px;
+
+  border:none;
+  background:transparent;
+
+  font-size:26px;
+  line-height:1;
+
+  color:#6b7280;
+
+  cursor:pointer;
+}
+
+
+.search-close:hover{
+  color:var(--red);
+}
+
+/* Search Close Button */
+
+.search-container{
+  position:relative;
+}
+
+.search-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+
+  width:36px;
+  height:36px;
+
+  border:none;
+  background:#f3f4f6;
+
+  color:#333;
+  font-size:28px;
+  line-height:30px;
+
+  border-radius:50%;
+  cursor:pointer;
+
+  transition:all .2s ease;
+}
+
+.search-close:hover{
+  background:var(--red);
+  color:#fff;
+}

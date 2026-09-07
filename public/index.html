@@ -495,6 +495,15 @@ main.container{
 
   <div class="search-container">
 
+    <!-- Close Button -->
+    <button
+      class="search-close"
+      id="searchClose"
+      aria-label="Close search"
+    >
+      ×
+    </button>
+
     <div class="search-box">
 
       <input
@@ -1014,6 +1023,36 @@ if (newsSearchInput) {
 
     }
   );
+
+}
+
+// ============================================================
+// PHASE 5 - OPEN SEARCH PANEL
+// ============================================================
+
+const searchTrigger = document.getElementById("searchTrigger");
+
+const searchPanel = document.getElementById("searchPanel");
+
+const newsSearchInput =
+  document.getElementById("newsSearchInput");
+
+
+if (searchTrigger && searchPanel) {
+
+  searchTrigger.addEventListener("click", function () {
+
+    searchPanel.classList.add("active");
+
+    setTimeout(function () {
+
+      if (newsSearchInput) {
+        newsSearchInput.focus();
+      }
+
+    }, 100);
+
+  });
 
 }
 
