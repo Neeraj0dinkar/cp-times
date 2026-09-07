@@ -1145,3 +1145,215 @@ button {
   gap: 20px;
   align-items: start;
 }
+
+/* ============================================================
+   CP TIMES DESKTOP WIDTH & LAYOUT IMPROVEMENT
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. USE THE AVAILABLE DESKTOP SCREEN SPACE PROPERLY
+   ------------------------------------------------------------ */
+
+.container,
+.mast-inner,
+.nav-inner,
+.breaking-inner {
+  width: min(1320px, calc(100% - 48px));
+  max-width: 1320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* ------------------------------------------------------------
+   2. MAIN HERO + RIGHT SIDEBAR LAYOUT
+   ------------------------------------------------------------ */
+
+.top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 24px;
+  align-items: start;
+}
+
+
+/* ------------------------------------------------------------
+   3. HERO STORY SIZE
+   ------------------------------------------------------------ */
+
+.hero {
+  width: 100%;
+  min-height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+
+/* Make hero content easier to read */
+
+.hero-content {
+  padding: 32px;
+}
+
+
+/* Better desktop headline size */
+
+.hero h1 {
+  font-size: clamp(32px, 3vw, 48px);
+  line-height: 1.08;
+  max-width: 850px;
+}
+
+
+/* Hero description */
+
+.hero p {
+  font-size: 16px;
+  max-width: 700px;
+}
+
+
+/* ------------------------------------------------------------
+   4. RIGHT SIDEBAR
+   ------------------------------------------------------------ */
+
+.right-rail,
+.top-sidebar {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* Make sidebar cards visually balanced */
+
+.rail-card {
+  width: 100%;
+}
+
+
+/* ------------------------------------------------------------
+   5. LATEST NEWS SECTION
+   ------------------------------------------------------------ */
+
+.news-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+
+/* Better article cards */
+
+.card {
+  min-width: 0;
+}
+
+
+/* ------------------------------------------------------------
+   6. SECTION SPACING
+   ------------------------------------------------------------ */
+
+main.container {
+  padding-top: 12px;
+  padding-bottom: 40px;
+}
+
+
+/* ------------------------------------------------------------
+   7. DESKTOP LARGE SCREEN OPTIMIZATION
+   ------------------------------------------------------------ */
+
+@media (min-width: 1500px) {
+
+  .container,
+  .mast-inner,
+  .nav-inner,
+  .breaking-inner {
+    width: min(1400px, calc(100% - 80px));
+    max-width: 1400px;
+  }
+
+  .top-grid {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 28px;
+  }
+
+  .hero {
+    min-height: 540px;
+  }
+
+}
+
+
+/* ------------------------------------------------------------
+   8. TABLET
+   ------------------------------------------------------------ */
+
+@media (max-width: 1000px) {
+
+  .container,
+  .mast-inner,
+  .nav-inner,
+  .breaking-inner {
+    width: calc(100% - 36px);
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .right-rail,
+  .top-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .news-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+/* ------------------------------------------------------------
+   9. MOBILE
+   ------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+
+  .container,
+  .mast-inner,
+  .nav-inner,
+  .breaking-inner {
+    width: calc(100% - 24px);
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .right-rail,
+  .top-sidebar {
+    display: block;
+  }
+
+  .hero {
+    min-height: 430px;
+    border-radius: 8px;
+  }
+
+  .hero-content {
+    padding: 20px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
+
+  .news-list {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+}

@@ -17,7 +17,7 @@ style<!doctype html>
 :root{--red:#d71920;--red-dark:#b51218;--ink:#121826;--muted:#6b7280;--line:#e5e7eb;--paper:#fff;--soft:#f7f7f8}
 html{scroll-behavior:smooth}
 body{margin:0;background:#fff;color:var(--ink);font-family:Arial,Helvetica,sans-serif}
-a{color:inherit}.container{width:min(1280px,94%);margin:auto}
+a{color:inherit}.container{width:min(1360px,calc(100% - 48px));margin:auto;}
 
 .mast{height:88px;padding:10px 3%;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--red);background:#fff}
 .mast img{width:190px;height:62px;object-fit:contain}.login-link{font-weight:700;color:#333;text-decoration:none}.login-link:hover{color:var(--red)}
@@ -269,6 +269,198 @@ main.container{
 @media(max-width:700px){
   .weather-details{grid-template-columns:repeat(3,1fr)}
   .weather-city{max-width:110px}
+}
+
+/* =====================================================
+   CP TIMES DESKTOP LAYOUT IMPROVEMENT
+   ===================================================== */
+
+/* Increase overall website width */
+.container,
+.breaking-inner,
+.mast-inner,
+.nav-inner {
+  width: min(1380px, calc(100% - 48px));
+  max-width: 1380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* Better Hero + Sidebar proportions */
+.top-grid {
+  grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+
+/* Improve hero size on desktop */
+@media (min-width: 1001px) {
+
+  .hero {
+    min-height: 500px;
+    max-height: 540px;
+  }
+
+}
+
+
+/* Reduce unnecessary gap below top section */
+.top-grid {
+  margin-bottom: 28px;
+}
+
+
+/* Latest news should start closer */
+.section-heading {
+  margin-top: 10px;
+}
+
+
+/* Better desktop article grid */
+.news-list {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+
+/* Larger and more readable desktop cards */
+.card h3 {
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+
+/* Tablet layout */
+@media (max-width: 1000px) {
+
+  .container,
+  .breaking-inner,
+  .mast-inner,
+  .nav-inner {
+    width: calc(100% - 36px);
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* Mobile layout */
+@media (max-width: 700px) {
+
+  .container,
+  .breaking-inner,
+  .mast-inner,
+  .nav-inner {
+    width: calc(100% - 24px);
+  }
+
+  .top-grid {
+    gap: 16px;
+  }
+
+  .hero {
+    min-height: 410px;
+  }
+
+  .news-list {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+/* =====================================================
+   CP TIMES FINAL DESKTOP WIDTH FIX
+   ===================================================== */
+
+@media (min-width: 1001px) {
+
+  .container {
+    width: min(1360px, calc(100% - 48px)) !important;
+    max-width: 1360px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  main.container {
+    width: min(1360px, calc(100% - 48px)) !important;
+    max-width: 1360px !important;
+  }
+
+  .top-grid {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+}
+
+@media (min-width: 1001px) {
+
+  .top-grid {
+    display: grid !important;
+
+    grid-template-columns:
+      minmax(0, 3.2fr)
+      minmax(280px, 1fr) !important;
+
+    gap: 24px !important;
+
+    align-items: start !important;
+  }
+
+}
+
+/* =====================================================
+   CP TIMES DESKTOP LAYOUT FINAL FIX
+   ===================================================== */
+
+@media (min-width: 1001px) {
+
+  /* Use available desktop width */
+  .container,
+  main.container {
+    width: min(1360px, calc(100% - 48px)) !important;
+    max-width: 1360px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Hero + sidebar layout */
+  .top-grid {
+    width: 100% !important;
+    max-width: none !important;
+
+    display: grid !important;
+
+    grid-template-columns:
+      minmax(0, 3.2fr)
+      minmax(280px, 1fr) !important;
+
+    gap: 24px !important;
+
+    align-items: start !important;
+
+    min-height: auto !important;
+    height: auto !important;
+
+    margin-bottom: 32px !important;
+  }
+
+  /* Hero should use its available column */
+  .hero {
+    width: 100% !important;
+    min-height: 480px !important;
+  }
+
+  /* Sidebar full width of its column */
+  .right-rail {
+    width: 100% !important;
+  }
+
 }
 
 </style>
