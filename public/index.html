@@ -491,6 +491,34 @@ main.container{
 
 </header>
 
+<section class="search-panel" id="searchPanel">
+
+  <div class="search-container">
+
+    <div class="search-box">
+
+      <input
+        type="text"
+        id="newsSearchInput"
+        placeholder="Search news..."
+        autocomplete="off"
+      >
+
+      <button id="newsSearchButton">
+        Search
+      </button>
+
+    </div>
+
+    <div
+      id="searchResults"
+      class="search-results"
+    ></div>
+
+  </div>
+
+</section>
+
 <nav class="nav">
   <a href="/">HOME</a><a href="/category/india">INDIA</a><a href="/category/uttar-pradesh">UTTAR PRADESH</a>
   <a href="/category/world">WORLD</a><a href="/category/business">BUSINESS</a><a href="/category/technology">TECHNOLOGY</a>
@@ -806,6 +834,368 @@ document.getElementById("weatherCity")?.addEventListener("change",loadWeather);
 loadWeather();
 setInterval(loadWeather, 15*60*1000);
 
+// ============================================================
+// NEWS SEARCH
+// ============================================================
+
+const searchToggle =
+  document.getElementById("searchToggle");
+
+const searchPanel =
+  document.getElementById("searchPanel");
+
+const newsSearchInput =
+  document.getElementById("newsSearchInput");
+
+const newsSearchButton =
+  document.getElementById("newsSearchButton");
+
+const searchResults =
+  document.getElementById("searchResults");
+
+
+// Open / Close Search Panel
+
+if (searchToggle) {
+
+  searchToggle.addEventListener("click", () => {
+
+    searchPanel.classList.toggle("active");
+
+    if (
+      searchPanel.classList.contains("active")
+    ) {
+
+      setTimeout(() => {
+        newsSearchInput.focus();
+      }, 100);
+
+    }
+
+  });
+
+}
+
+
+// Perform Search
+
+async function performNewsSearch() {
+
+  const query =
+    newsSearchInput.value.trim();
+
+  if (!query) {
+
+    searchResults.innerHTML =
+      `<div class="search-result-empty">
+        Please enter something to search.
+      </div>`;
+
+    return;
+  }
+
+
+  searchResults.innerHTML =
+    `<div class="search-result-empty">
+      Searching news...
+    </div>`;
+
+
+  try {
+
+    const response =
+      await fetch(
+        `/api/search?q=${encodeURIComponent(query)}`
+      );
+
+
+    if (!response.ok) {
+      throw new Error("Search failed");
+    }
+
+
+    const articles =
+      await response.json();
+
+
+    if (!articles.length) {
+
+      searchResults.innerHTML =
+        `<div class="search-result-empty">
+          No news found for "${query}".
+        </div>`;
+
+      return;
+    }
+
+
+    searchResults.innerHTML =
+      articles.map(article => {
+
+        const image =
+          article.image_url ||
+          "/placeholder-news.jpg";
+
+
+        return `
+
+          <a
+            class="search-result-item"
+            href="/article.html?slug=${encodeURIComponent(article.slug || "")}"
+          >
+
+            <img
+              src="${image}"
+              alt=""
+            >
+
+            <div class="search-result-content">
+
+              <div class="search-result-category">
+                ${article.category || "News"}
+              </div>
+
+              <div class="search-result-title">
+                ${article.title || ""}
+              </div>
+
+            </div>
+
+          </a>
+
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    console.error(
+      "Search error:",
+      error
+    );
+
+
+    searchResults.innerHTML =
+      `<div class="search-result-empty">
+        Unable to search news. Please try again.
+      </div>`;
+
+  }
+
+}
+
+
+// Search Button
+
+if (newsSearchButton) {
+
+  newsSearchButton.addEventListener(
+    "click",
+    performNewsSearch
+  );
+
+}
+
+
+// Enter Key Search
+
+if (newsSearchInput) {
+
+  newsSearchInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (event.key === "Enter") {
+
+        performNewsSearch();
+
+      }
+
+    }
+  );
+
+}
+
 </script>
+
+
+<!-- SEARCH FUNCTIONALITY -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  console.log("Search system initialized");
+
+  const searchToggle = document.getElementById("searchToggle");
+  const searchPanel = document.getElementById("searchPanel");
+  const closeSearch = document.getElementById("closeSearch");
+  const newsSearchInput = document.getElementById("newsSearchInput");
+  const searchResults = document.getElementById("searchResults");
+
+
+  if (!searchToggle) {
+    console.error("Search button not found");
+    return;
+  }
+
+
+  // OPEN SEARCH PANEL
+
+  searchToggle.addEventListener("click", function () {
+
+    console.log("Search button clicked");
+
+    searchPanel.classList.add("active");
+
+    setTimeout(function () {
+
+      if (newsSearchInput) {
+        newsSearchInput.focus();
+      }
+
+    }, 100);
+
+  });
+
+
+  // CLOSE SEARCH PANEL
+
+  if (closeSearch) {
+
+    closeSearch.addEventListener("click", function () {
+
+      searchPanel.classList.remove("active");
+
+      if (newsSearchInput) {
+        newsSearchInput.value = "";
+      }
+
+      if (searchResults) {
+        searchResults.innerHTML = "";
+      }
+
+    });
+
+  }
+
+
+  // SEARCH NEWS
+
+  let searchTimer;
+
+
+  if (newsSearchInput) {
+
+    newsSearchInput.addEventListener("input", function () {
+
+      clearTimeout(searchTimer);
+
+      const query = this.value.trim();
+
+
+      if (query.length < 2) {
+
+        searchResults.innerHTML = "";
+
+        return;
+
+      }
+
+
+      searchTimer = setTimeout(async function () {
+
+        try {
+
+          searchResults.innerHTML =
+            '<div class="search-empty">Searching...</div>';
+
+
+          const response = await fetch(
+            "/api/search?q=" + encodeURIComponent(query)
+          );
+
+
+          if (!response.ok) {
+
+            throw new Error("Search failed");
+
+          }
+
+
+          const articles = await response.json();
+
+
+          if (!articles || articles.length === 0) {
+
+            searchResults.innerHTML =
+              '<div class="search-empty">No news found.</div>';
+
+            return;
+
+          }
+
+
+          searchResults.innerHTML = articles.map(function (article) {
+
+            return `
+              <a
+                class="search-result-item"
+                href="/article.html?slug=${encodeURIComponent(article.slug || article.id)}"
+              >
+
+                <span class="search-result-category">
+                  ${escapeHtml(article.category || "News")}
+                </span>
+
+                <div class="search-result-title">
+                  ${escapeHtml(article.title || "")}
+                </div>
+
+                <div class="search-result-excerpt">
+                  ${escapeHtml(article.excerpt || "")}
+                </div>
+
+              </a>
+            `;
+
+          }).join("");
+
+
+        } catch (error) {
+
+          console.error("Search error:", error);
+
+          searchResults.innerHTML =
+            '<div class="search-empty">Unable to search news.</div>';
+
+        }
+
+      }, 400);
+
+    });
+
+  }
+
+
+  // SAFE HTML FUNCTION
+
+  function escapeHtml(value) {
+
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+});
+
+</script>
+
 </body>
 </html>
+

@@ -1452,3 +1452,412 @@ main.container {
   }
 
 }
+
+/* ============================================================
+   PHASE 6.2.1 - HEADER SEARCH BUTTON
+   ============================================================ */
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.search-trigger{
+  display:flex;
+  align-items:center;
+  gap:7px;
+
+  background:transparent;
+  border:none;
+  cursor:pointer;
+
+  color:#374151;
+  font-size:14px;
+  font-weight:600;
+
+  padding:8px 10px;
+  border-radius:6px;
+
+  transition:background .2s ease,color .2s ease;
+}
+
+.search-trigger:hover{
+  background:#f3f4f6;
+  color:#d71920;
+}
+
+.search-icon{
+  font-size:22px;
+  line-height:1;
+  font-weight:normal;
+}
+
+.login-link{
+  white-space:nowrap;
+}
+
+/* Mobile */
+
+@media(max-width:700px){
+
+  .header-actions{
+    gap:8px;
+  }
+
+  .search-trigger{
+    padding:7px;
+  }
+
+  .search-text{
+    display:none;
+  }
+
+  .search-icon{
+    font-size:24px;
+  }
+
+}
+
+/* =========================================================
+   NEWS SEARCH
+========================================================= */
+
+.mast-actions{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.search-toggle{
+  width:38px;
+  height:38px;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s ease;
+}
+
+.search-toggle:hover{
+  background:var(--red);
+  color:#fff;
+  border-color:var(--red);
+}
+
+
+/* Search panel */
+
+.search-panel{
+  display:none;
+  width:100%;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  padding:18px 0;
+}
+
+.search-panel.active{
+  display:block;
+}
+
+.search-container{
+  width:min(900px,94%);
+  margin:auto;
+}
+
+.search-box{
+  display:flex;
+  gap:10px;
+}
+
+.search-box input{
+  flex:1;
+  height:46px;
+  padding:0 16px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  font-size:15px;
+  outline:none;
+}
+
+.search-box input:focus{
+  border-color:var(--red);
+}
+
+.search-box button{
+  padding:0 24px;
+  border:none;
+  background:var(--red);
+  color:#fff;
+  border-radius:5px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.search-results{
+  margin-top:16px;
+}
+
+.search-result-item{
+  display:flex;
+  gap:14px;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+  text-decoration:none;
+}
+
+.search-result-item img{
+  width:120px;
+  height:75px;
+  object-fit:cover;
+  border-radius:4px;
+}
+
+.search-result-content{
+  flex:1;
+}
+
+.search-result-category{
+  font-size:11px;
+  font-weight:bold;
+  color:var(--red);
+  text-transform:uppercase;
+}
+
+.search-result-title{
+  margin-top:5px;
+  font-size:17px;
+  font-weight:bold;
+  line-height:1.35;
+}
+
+.search-result-empty{
+  padding:20px 0;
+  color:var(--muted);
+}
+
+/* =========================================================
+   NEWS SEARCH
+========================================================= */
+
+.mast-actions{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.search-toggle{
+  width:38px;
+  height:38px;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s ease;
+}
+
+.search-toggle:hover{
+  background:var(--red);
+  color:#fff;
+  border-color:var(--red);
+}
+
+
+/* Search panel */
+
+.search-panel{
+  display:none;
+  width:100%;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  padding:18px 0;
+}
+
+.search-panel.active{
+  display:block;
+}
+
+.search-container{
+  width:min(900px,94%);
+  margin:auto;
+}
+
+.search-box{
+  display:flex;
+  gap:10px;
+}
+
+.search-box input{
+  flex:1;
+  height:46px;
+  padding:0 16px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  font-size:15px;
+  outline:none;
+}
+
+.search-box input:focus{
+  border-color:var(--red);
+}
+
+.search-box button{
+  padding:0 24px;
+  border:none;
+  background:var(--red);
+  color:#fff;
+  border-radius:5px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.search-results{
+  margin-top:16px;
+}
+
+.search-result-item{
+  display:flex;
+  gap:14px;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+  text-decoration:none;
+}
+
+.search-result-item img{
+  width:120px;
+  height:75px;
+  object-fit:cover;
+  border-radius:4px;
+}
+
+.search-result-content{
+  flex:1;
+}
+
+.search-result-category{
+  font-size:11px;
+  font-weight:bold;
+  color:var(--red);
+  text-transform:uppercase;
+}
+
+.search-result-title{
+  margin-top:5px;
+  font-size:17px;
+  font-weight:bold;
+  line-height:1.35;
+}
+
+.search-result-empty{
+  padding:20px 0;
+  color:var(--muted);
+}
+
+/* =====================================================
+   SEARCH PANEL
+===================================================== */
+
+.search-panel{
+  display:none;
+  position:fixed;
+  top:88px;
+  left:0;
+  width:100%;
+  min-height:150px;
+  background:#ffffff;
+  border-bottom:2px solid #e5e7eb;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+  z-index:9999;
+}
+
+.search-panel.active{
+  display:block !important;
+}
+
+.search-panel-inner{
+  padding-top:20px;
+  padding-bottom:25px;
+}
+
+.search-box{
+  position:relative;
+  max-width:850px;
+  margin:auto;
+}
+
+.search-box input{
+  width:100%;
+  height:52px;
+  padding:0 55px 0 18px;
+  border:1px solid #d1d5db;
+  border-radius:6px;
+  font-size:16px;
+  outline:none;
+}
+
+.search-box input:focus{
+  border-color:#d71920;
+}
+
+.close-search{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  border:none;
+  background:none;
+  font-size:28px;
+  cursor:pointer;
+}
+
+.search-results{
+  max-width:850px;
+  margin:15px auto 0;
+  max-height:500px;
+  overflow-y:auto;
+}
+
+.search-result-item{
+  display:block;
+  padding:15px;
+  border-bottom:1px solid #e5e7eb;
+  text-decoration:none;
+}
+
+.search-result-item:hover{
+  background:#f7f7f7;
+}
+
+.search-result-category{
+  display:block;
+  color:#d71920;
+  font-size:11px;
+  font-weight:bold;
+  margin-bottom:5px;
+}
+
+.search-result-title{
+  font-size:17px;
+  font-weight:bold;
+  color:#121826;
+}
+
+.search-result-excerpt{
+  margin-top:6px;
+  color:#6b7280;
+  font-size:13px;
+}
+
+.search-empty{
+  padding:20px;
+  text-align:center;
+  color:#6b7280;
+}
