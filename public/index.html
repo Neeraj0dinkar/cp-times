@@ -1,14 +1,12 @@
-<!doctype html>
+style<!doctype html>
 <html lang="en-IN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-
 <link rel="preconnect"
       href="https://fonts.gstatic.com"
       crossorigin>
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
       rel="stylesheet">
 <title>CP Times | Latest India News</title>
@@ -32,7 +30,9 @@ a{color:inherit}.container{width:min(1280px,94%);margin:auto}
 
 .top-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(300px,1fr);gap:22px;margin:24px 0 34px;align-items:stretch}
 
-.hero{position:relative;min-height:570px;border-radius:8px;overflow:hidden;background:#1f2937 center/cover no-repeat;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.12)}
+.hero{position:relative;height:520px;
+  min-height:520px;
+  max-height:520px;border-radius:8px;overflow:hidden;background:#1f2937 center/cover no-repeat;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.12)}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.9) 100%)}
 .hero-content{position:absolute;z-index:2;left:0;right:0;bottom:0;padding:38px 38px 32px;color:#fff}
 .hero h1{font-family:Georgia,'Noto Serif Devanagari',serif;font-size:45px;line-height:1.12;margin:10px 0 14px;max-width:900px}
@@ -118,7 +118,7 @@ body{background:#f4f5f7;color:#111827}
 }
 
 /* Sidebar cards */
-.top-sidebar{gap:20px}
+.right-rail{gap:20px}
 .sidebar-card{
   border:1px solid #dfe2e6;
   border-radius:10px;
@@ -158,7 +158,7 @@ main.container{
 
 /* Desktop: keep the sidebar visually attached to the top story */
 @media(min-width:1001px){
-  .top-sidebar{
+  .right-rail{
     position:sticky;
     top:16px;
     align-self:start;
@@ -168,14 +168,14 @@ main.container{
 /* Very wide screens */
 @media(min-width:1600px){
   .container,.breaking-inner,.mast-inner,.nav-inner{max-width:1580px}
-  .hero{min-height:560px}
+  .hero{height:540px;min-height:540px;max-height:540px;}
 }
 
 /* Tablet */
 @media(max-width:1000px){
   .container{width:calc(100% - 36px)}
   .top-grid{grid-template-columns:1fr}
-  .top-sidebar{display:grid;grid-template-columns:1fr 1fr;position:static}
+  .right-rail{display:grid;grid-template-columns:1fr 1fr;position:static}
 }
 
 /* Mobile */
@@ -186,7 +186,7 @@ main.container{
   .breaking-inner{padding-left:12px;padding-right:12px}
   .top-grid{gap:16px}
   .hero{min-height:410px;border-radius:7px}
-  .top-sidebar{display:grid;grid-template-columns:1fr}
+  .right-rail{display:grid;grid-template-columns:1fr}
   .news-list{grid-template-columns:1fr}
 }
 
@@ -404,23 +404,46 @@ async function go(){
     month: "2-digit"
   }).format(now);
 
-  let [a,b,s,f,h,t] = await Promise.all([
+  let results = await Promise.allSettled([
+    fetch("/api/articles?limit=12").then(r => {
+        if (!r.ok) throw new Error("Articles API failed");
+        return r.json();
+    }),
 
-      fetch("/api/articles?limit=12").then(r=>r.json()),
+    fetch("/api/breaking").then(r => {
+        if (!r.ok) throw new Error("Breaking API failed");
+        return r.json();
+    }),
 
-      fetch("/api/breaking").then(r=>r.json()),
+    fetch("/api/settings").then(r => {
+        if (!r.ok) throw new Error("Settings API failed");
+        return r.json();
+    }),
 
-      fetch("/api/settings").then(r=>r.json()),
+    fetch("/api/fun-facts?limit=8&language=English").then(r => {
+        if (!r.ok) throw new Error("Fun Facts API failed");
+        return r.json();
+    }),
 
-      fetch("/api/fun-facts?limit=8&language=English").then(r=>r.json()),
+    fetch(`/api/horoscope?month=${currentMonth}`).then(r => {
+        if (!r.ok) throw new Error("Horoscope API failed");
+        return r.json();
+    })
+]);
 
-      fetch(`/api/horoscope?month=${currentMonth}`).then(r=>r.json()),
+let a = results[0].status === "fulfilled" ? results[0].value : [];
+let b = results[1].status === "fulfilled" ? results[1].value : [];
+let s = results[2].status === "fulfilled" ? results[2].value : {};
+let f = results[3].status === "fulfilled" ? results[3].value : [];
+let h = results[4].status === "fulfilled" ? results[4].value : [];
 
-      fetch("/api/articles?limit=5").then(r=>r.json())
-
-  ]);
+console.log("API Results:", results);
     
-    if(b[0])document.getElementById("b").textContent=b[0].headline;document.getElementById("list").innerHTML=(a||[]).map(x=>`<article class="card"><a href="/${categorySlug(x.category)}/${articleUrlKey(x)}"><img class="thumb" src="${x.image_url||"/fallback-news.svg"}" alt=""></a><span class="tag">${e(x.category)}</span><h3><a href="/${categorySlug(x.category)}/${articleUrlKey(x)}">${e(x.title)}</a></h3><p>${e(x.excerpt||"")}</p><span class="meta">${e(x.author_name||"CP Times Desk")} • ${new Date(x.published_at).toLocaleString("en-IN")}</span></article>`).join("")||"<p>No published stories yet.</p>";if(a[0]){document.getElementById("hero").style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.9),transparent),url("${a[0].image_url||"/fallback-news.svg"}")`;document.getElementById("hero").querySelector("h1").textContent=a[0].title;document.getElementById("hero").onclick=()=>location.href=`/${categorySlug(a[0].category)}/${articleUrlKey(a[0])}`;document.getElementById("hero").style.cursor="pointer"}if(s.youtube_featured_video)document.getElementById("yt").innerHTML=`<iframe width="100%" height="220" src="https://www.youtube.com/embed/${encodeURIComponent(s.youtube_featured_video)}" frameborder="0" allowfullscreen></iframe>`;
+    if (b && b[0] && b[0].headline) {
+        document.getElementById("b").textContent = b[0].headline;
+    } else {
+        document.getElementById("b").textContent = "Latest news updates from CP Times";
+    }document.getElementById("list").innerHTML=(a||[]).map(x=>`<article class="card"><a href="/${categorySlug(x.category)}/${articleUrlKey(x)}"><img class="thumb" src="${x.image_url||"/fallback-news.svg"}" alt=""></a><span class="tag">${e(x.category)}</span><h3><a href="/${categorySlug(x.category)}/${articleUrlKey(x)}">${e(x.title)}</a></h3><p>${e(x.excerpt||"")}</p><span class="meta">${e(x.author_name||"CP Times Desk")} • ${new Date(x.published_at).toLocaleString("en-IN")}</span></article>`).join("")||"<p>No published stories yet.</p>";if(a[0]){document.getElementById("hero").style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.9),transparent),url("${a[0].image_url||"/fallback-news.svg"}")`;document.getElementById("hero").querySelector("h1").textContent=a[0].title;document.getElementById("hero").onclick=()=>location.href=`/${categorySlug(a[0].category)}/${articleUrlKey(a[0])}`;document.getElementById("hero").style.cursor="pointer"}if(s.youtube_featured_video)document.getElementById("yt").innerHTML=`<iframe width="100%" height="220" src="https://www.youtube.com/embed/${encodeURIComponent(s.youtube_featured_video)}" frameborder="0" allowfullscreen></iframe>`;
     facts=Array.isArray(f)?f:[];
     renderFact();
 

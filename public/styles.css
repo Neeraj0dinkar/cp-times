@@ -1117,3 +1117,31 @@ button {
   }
 
 }
+
+
+/* =========================================================
+   CP TIMES - PROFESSIONAL DESKTOP LAYOUT
+   ========================================================= */
+
+/* Main page width */
+
+.container,
+.page-container,
+.main-container {
+  width: min(1180px, calc(100% - 40px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* =========================================================
+   MAIN NEWS LAYOUT
+   ========================================================= */
+
+.main-layout,
+.content-layout,
+.home-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(300px, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
