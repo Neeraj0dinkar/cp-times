@@ -467,8 +467,28 @@ main.container{
 </head>
 <body>
 <header class="mast">
-  <a href="/"><img src="/cv-news-logo.jpeg" alt="CP Times"></a>
-  <a class="login-link" href="/login">Newsroom Login</a>
+
+  <a href="/">
+    <img src="/cv-news-logo.jpeg" alt="CP Times">
+  </a>
+
+  <div class="header-actions">
+
+    <button
+      class="search-trigger"
+      id="searchTrigger"
+      aria-label="Search news"
+    >
+      <span class="search-icon">⌕</span>
+      <span class="search-text">Search</span>
+    </button>
+
+    <a class="login-link" href="/login">
+      Newsroom Login
+    </a>
+
+  </div>
+
 </header>
 
 <nav class="nav">
