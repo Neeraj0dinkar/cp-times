@@ -2512,3 +2512,111 @@ button:hover {
   text-transform: uppercase;
   letter-spacing: .3px;
 }
+
+/* =========================================================
+   CP TIMES - FOOTER
+   ========================================================= */
+
+.site-footer {
+  margin-top: 40px;
+  background: #111827;
+  color: #fff;
+}
+
+.footer-inner {
+  width: min(1400px, 94vw);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 38px 0 30px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.footer-brand {
+  min-width: 180px;
+}
+
+.footer-logo {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.footer-brand p {
+  margin: 5px 0 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  letter-spacing: .5px;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 22px;
+  max-width: 800px;
+}
+
+.footer-nav a {
+  color: #e5e7eb;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: color .2s ease;
+}
+
+.footer-nav a:hover {
+  color: #fff;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.12);
+  text-align: center;
+  padding: 14px 20px;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   FOOTER - MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .site-footer {
+    margin-top: 30px;
+  }
+
+  .footer-inner {
+    width: calc(100% - 32px);
+    padding: 30px 0 24px;
+    display: block;
+  }
+
+  .footer-brand {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .footer-logo {
+    font-size: 24px;
+  }
+
+  .footer-nav {
+    justify-content: center;
+    gap: 12px 18px;
+  }
+
+  .footer-nav a {
+    font-size: 12px;
+  }
+
+}
