@@ -740,52 +740,116 @@ async function go() {
       const hero =
         document.getElementById("hero");
 
-      if (hero && a[0]) {
+      if (hero && a.length) {
 
-        const heroImage =
-          a[0].image_url ||
-          "/fallback-news.svg";
+        let heroIndex = 0;
 
-        hero.style.backgroundImage =
-          `linear-gradient(
-            0deg,
-            rgba(0,0,0,.92),
-            rgba(0,0,0,.08)
-          ),
-          url("${heroImage}")`;
+        function showHeroStory(index) {
 
-        const heroTitle =
-          hero.querySelector("h1");
+          const story = a[index];
 
-        if (heroTitle) {
+          if (!story) return;
 
-          heroTitle.textContent =
-            a[0].title || "CP Times";
+          const heroImage =
+            story.image_url ||
+            "/fallback-news.svg";
+
+          hero.style.backgroundImage =
+            `linear-gradient(
+              0deg,
+              rgba(0,0,0,.92),
+              rgba(0,0,0,.08)
+            ),
+            url("${heroImage}")`;
+
+          const heroTitle =
+            hero.querySelector("h1");
+
+          if (heroTitle) {
+            heroTitle.textContent =
+              story.title || "CP Times";
+          }
+
+          const heroDescription =
+            hero.querySelector("p");
+
+          if (heroDescription) {
+            heroDescription.textContent =
+              story.excerpt ||
+              "Latest news from CP Times.";
+          }
+
+          hero.onclick = () => {
+
+            location.href =
+              `/${categorySlug(story.category)}/${articleUrlKey(story)}`;
+
+          };
+
+          hero.style.cursor = "pointer";
 
         }
 
-        const heroDescription =
-          hero.querySelector("p");
 
-        if (heroDescription) {
+        // Show the first story immediately
+        showHeroStory(heroIndex);
 
-          heroDescription.textContent =
-            a[0].excerpt ||
-            "Latest news from CP Times.";
 
-        }
+        // Change hero story every 5 seconds
+        setInterval(() => {
 
-        hero.onclick = () => {
+          heroIndex =
+            (heroIndex + 1) % a.length;
 
-          location.href =
-            `/${categorySlug(a[0].category)}/${articleUrlKey(a[0])}`;
+          showHeroStory(heroIndex);
 
-        };
-
-        hero.style.cursor = "pointer";
+        }, 5000);
 
       }
 
+      // If you want to disable the hero rotation and just show the first story, you can comment out the above setInterval code and use the following instead:
+      // const hero =
+      //   document.getElementById("hero");
+
+      // if (hero && a[0]) {
+
+      //   const heroImage =
+      //     a[0].image_url ||
+      //     "/fallback-news.svg";
+
+      //   hero.style.backgroundImage =
+      //     `linear-gradient(
+      //       0deg,
+      //       rgba(0,0,0,.92),
+      //       rgba(0,0,0,.08)
+      //     ),
+      //     url("${heroImage}")`;
+
+      //   const heroTitle =
+      //     hero.querySelector("h1");
+
+      //   if (heroTitle) {
+      //     heroTitle.textContent =
+      //       a[0].title || "CP Times";
+      //   }
+
+      //   const heroDescription =
+      //     hero.querySelector("p");
+
+      //   if (heroDescription) {
+      //     heroDescription.textContent =
+      //       a[0].excerpt ||
+      //       "Latest news from CP Times.";
+      //   }
+
+      //   hero.onclick = () => {
+      //     location.href =
+      //       `/${categorySlug(a[0].category)}/${articleUrlKey(a[0])}`;
+      //   };
+
+      //   hero.style.cursor = "pointer";
+
+      // }
 
       // --------------------------------------------------------
       // TRENDING
