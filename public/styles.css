@@ -2470,3 +2470,45 @@ button:hover {
 #b {
   color: #1f2937 !important;
 }
+
+/* =========================================================
+   CP TIMES - TRENDING NEWS POLISH
+   ========================================================= */
+
+.trending-item {
+  padding: 15px 16px;
+  gap: 14px;
+  transition:
+    background .2s ease,
+    padding-left .2s ease;
+}
+
+.trending-item:hover {
+  background: #fafafa;
+  padding-left: 19px;
+}
+
+.trending-number {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #a1a8b3;
+  min-width: 34px;
+}
+
+.trending-content h4 {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.trending-content span {
+  display: block;
+  margin-top: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #8b93a1;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
