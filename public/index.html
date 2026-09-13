@@ -9,6 +9,7 @@
       crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
       rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
 <title>CP Times | Latest India News</title>
 <meta name="description" content="CP Times — fast, factual and fearless news from India and around the world.">
 <link rel="canonical" href="https://cptimes.in/">
@@ -643,132 +644,751 @@ const articleUrlKey = x => {
   return `id-${x.id}`;
 };
 let facts=[],factIndex=0;const zodiacOrder=["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];const zodiacIcons={Aries:"♈",Taurus:"♉",Gemini:"♊",Cancer:"♋",Leo:"♌",Virgo:"♍",Libra:"♎",Scorpio:"♏",Sagittarius:"♐",Capricorn:"♑",Aquarius:"♒",Pisces:"♓"};
-async function go(){
-
-  const now = new Date();
+async function go() {
 
   const currentMonth = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
     year: "numeric",
     month: "2-digit"
-  }).format(now);
+  }).format(new Date());
 
-  let results = await Promise.allSettled([
-    fetch("/api/articles?limit=12").then(r => {
-        if (!r.ok) throw new Error("Articles API failed");
-        return r.json();
-    }),
+  // ============================================================
+  // ARTICLES + HERO + TRENDING
+  // ============================================================
 
-    fetch("/api/breaking").then(r => {
-        if (!r.ok) throw new Error("Breaking API failed");
-        return r.json();
-    }),
+  fetch("/api/articles?limit=12")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Articles API failed");
+      }
 
-    fetch("/api/settings").then(r => {
-        if (!r.ok) throw new Error("Settings API failed");
-        return r.json();
-    }),
-
-    fetch("/api/fun-facts?limit=8&language=English").then(r => {
-        if (!r.ok) throw new Error("Fun Facts API failed");
-        return r.json();
-    }),
-
-    fetch(`/api/horoscope?month=${currentMonth}`).then(r => {
-        if (!r.ok) throw new Error("Horoscope API failed");
-        return r.json();
+      return response.json();
     })
-]);
+    .then(articles => {
 
-let a = results[0].status === "fulfilled" ? results[0].value : [];
-let b = results[1].status === "fulfilled" ? results[1].value : [];
-let s = results[2].status === "fulfilled" ? results[2].value : {};
-let f = results[3].status === "fulfilled" ? results[3].value : [];
-let h = results[4].status === "fulfilled" ? results[4].value : [];
+      const a = Array.isArray(articles)
+        ? articles
+        : [];
 
-console.log("API Results:", results);
-    
-    if (b && b[0] && b[0].headline) {
-        document.getElementById("b").textContent = b[0].headline;
-    } else {
-        document.getElementById("b").textContent = "Latest news updates from CP Times";
-    }document.getElementById("list").innerHTML=(a||[]).map(x=>`<article class="card"><a href="/${categorySlug(x.category)}/${articleUrlKey(x)}"><img class="thumb" src="${x.image_url||"/fallback-news.svg"}" alt=""></a><span class="tag">${e(x.category)}</span><h3><a href="/${categorySlug(x.category)}/${articleUrlKey(x)}">${e(x.title)}</a></h3><p>${e(x.excerpt||"")}</p><span class="meta">${e(x.author_name||"CP Times Desk")} • ${new Date(x.published_at).toLocaleString("en-IN")}</span></article>`).join("")||"<p>No published stories yet.</p>";if(a[0]){document.getElementById("hero").style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.9),transparent),url("${a[0].image_url||"/fallback-news.svg"}")`;document.getElementById("hero").querySelector("h1").textContent=a[0].title;document.getElementById("hero").onclick=()=>location.href=`/${categorySlug(a[0].category)}/${articleUrlKey(a[0])}`;document.getElementById("hero").style.cursor="pointer"}if(s.youtube_featured_video)document.getElementById("yt").innerHTML=`<iframe width="100%" height="220" src="https://www.youtube.com/embed/${encodeURIComponent(s.youtube_featured_video)}" frameborder="0" allowfullscreen></iframe>`;
-    facts=Array.isArray(f)?f:[];
-    renderFact();
+      console.log("Articles loaded:", a);
 
-    renderHoroscope(Array.isArray(h)?h:[]);
+      // --------------------------------------------------------
+      // LATEST NEWS
+      // --------------------------------------------------------
 
-    if (typeof t !== "undefined") {
-        renderTrending(Array.isArray(t) ? t : []);
-    }
-    document.getElementById("nextFact").onclick=()=>{if(facts.length){factIndex=(factIndex+1)%facts.length;renderFact()}}}function renderFact(){let box=document.getElementById("funFacts");if(!facts.length){box.innerHTML="<p>No fun facts published yet.</p>";document.getElementById("nextFact").style.display="none";return}let x=facts[factIndex];box.innerHTML=`<div class="fact-category">${e(x.category)}</div><h3>${e(x.title)}</h3><p class="fact-text">${e(x.fact)}</p>${x.source?`<div class="fact-source">Source: ${e(x.source)}</div>`:""}`;const d=document.getElementById("factDots");if(d)d.innerHTML=facts.slice(0,8).map((_,i)=>`<button class="fact-dot ${i===factIndex?"active":""}" aria-label="Fact ${i+1}"></button>`).join("");if(d)d.querySelectorAll(".fact-dot").forEach((b,i)=>b.onclick=()=>{factIndex=i;renderFact()})}
-    function renderHoroscope(rows){
+      const list =
+        document.getElementById("list");
 
-      let monthName = new Date().toLocaleString(
-        "en-IN",
-        {
-          month: "long",
-          year: "numeric",
-          timeZone: "Asia/Kolkata"
+      if (list) {
+
+        if (!a.length) {
+
+          list.innerHTML =
+            "<p>No published stories yet.</p>";
+
+        } else {
+
+          list.innerHTML = a
+            .map(x => `
+              <article class="card">
+
+                <a
+                  href="/${categorySlug(x.category)}/${articleUrlKey(x)}"
+                >
+                  <img
+                    class="thumb"
+                    src="${x.image_url || "/fallback-news.svg"}"
+                    alt=""
+                  >
+                </a>
+
+                <span class="tag">
+                  ${e(x.category)}
+                </span>
+
+                <h3>
+                  <a
+                    href="/${categorySlug(x.category)}/${articleUrlKey(x)}"
+                  >
+                    ${e(x.title)}
+                  </a>
+                </h3>
+
+                <p>
+                  ${e(x.excerpt || "")}
+                </p>
+
+                <span class="meta">
+                  ${e(x.author_name || "CP Times Desk")}
+                  •
+                  ${new Date(x.published_at).toLocaleString("en-IN")}
+                </span>
+
+              </article>
+            `)
+            .join("");
+
         }
+
+      }
+
+
+      // --------------------------------------------------------
+      // HERO / TOP STORY
+      // --------------------------------------------------------
+
+      const hero =
+        document.getElementById("hero");
+
+      if (hero && a[0]) {
+
+        const heroImage =
+          a[0].image_url ||
+          "/fallback-news.svg";
+
+        hero.style.backgroundImage =
+          `linear-gradient(
+            0deg,
+            rgba(0,0,0,.92),
+            rgba(0,0,0,.08)
+          ),
+          url("${heroImage}")`;
+
+        const heroTitle =
+          hero.querySelector("h1");
+
+        if (heroTitle) {
+
+          heroTitle.textContent =
+            a[0].title || "CP Times";
+
+        }
+
+        const heroDescription =
+          hero.querySelector("p");
+
+        if (heroDescription) {
+
+          heroDescription.textContent =
+            a[0].excerpt ||
+            "Latest news from CP Times.";
+
+        }
+
+        hero.onclick = () => {
+
+          location.href =
+            `/${categorySlug(a[0].category)}/${articleUrlKey(a[0])}`;
+
+        };
+
+        hero.style.cursor = "pointer";
+
+      }
+
+
+      // --------------------------------------------------------
+      // TRENDING
+      // --------------------------------------------------------
+
+      renderTrending(a);
+
+    })
+    .catch(error => {
+
+      console.error(
+        "Articles loading error:",
+        error
       );
-    
-    document.getElementById("horoscopeMonthTitle").textContent=monthName;if(!rows.length){document.getElementById("horoscope").innerHTML="<p>No horoscope published for this month yet.</p>";return}let bySign={};rows.forEach(x=>bySign[x.sign]=x);document.getElementById("horoscope").innerHTML=zodiacOrder.filter(s=>bySign[s]).map(sign=>`<div class="zodiac"><div class="zodiac-head"><span>${zodiacIcons[sign]} ${sign}</span></div><p>${e(bySign[sign].content)}</p></div>`).join("")}go();
-    function renderTrending(items){
+
+      const list =
+        document.getElementById("list");
+
+      if (list) {
+
+        list.innerHTML =
+          "<p>Unable to load news right now.</p>";
+
+      }
+
+      const hero =
+        document.getElementById("hero");
+
+      if (hero) {
+
+        const heroTitle =
+          hero.querySelector("h1");
+
+        if (heroTitle) {
+
+          heroTitle.textContent =
+            "CP Times — Latest News";
+
+        }
+
+      }
+
+    });
+
+
+  // ============================================================
+  // BREAKING NEWS
+  // ============================================================
+
+  fetch("/api/breaking")
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error("Breaking API failed");
+      }
+
+      return response.json();
+
+    })
+    .then(breakingNews => {
+
+      const breaking =
+        document.getElementById("b");
+
+      if (!breaking) return;
+
+      if (
+        Array.isArray(breakingNews) &&
+        breakingNews.length &&
+        breakingNews[0].headline
+      ) {
+
+        breaking.textContent =
+          breakingNews[0].headline;
+
+      } else {
+
+        breaking.textContent =
+          "Latest news updates from CP Times";
+
+      }
+
+    })
+    .catch(error => {
+
+      console.error(
+        "Breaking news error:",
+        error
+      );
+
+      const breaking =
+        document.getElementById("b");
+
+      if (breaking) {
+
+        breaking.textContent =
+          "Latest news updates from CP Times";
+
+      }
+
+    });
+
+
+  // ============================================================
+  // SETTINGS / YOUTUBE
+  // ============================================================
+
+  fetch("/api/settings")
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error("Settings API failed");
+      }
+
+      return response.json();
+
+    })
+    .then(settings => {
+
+      const youtube =
+        document.getElementById("yt");
+
+      if (
+        youtube &&
+        settings &&
+        settings.youtube_featured_video
+      ) {
+
+        youtube.innerHTML = `
+          <iframe
+            width="100%"
+            height="220"
+            src="https://www.youtube.com/embed/${encodeURIComponent(
+              settings.youtube_featured_video
+            )}"
+            frameborder="0"
+            allowfullscreen
+            loading="lazy">
+          </iframe>
+        `;
+
+      }
+
+    })
+    .catch(error => {
+
+      console.error(
+        "Settings loading error:",
+        error
+      );
+
+    });
+
+
+  // ============================================================
+  // FUN FACTS
+  // ============================================================
+
+  fetch("/api/fun-facts?limit=8&language=English")
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error("Fun Facts API failed");
+      }
+
+      return response.json();
+
+    })
+    .then(data => {
+
+      facts =
+        Array.isArray(data)
+          ? data
+          : [];
+
+      factIndex = 0;
+
+      renderFact();
+
+    })
+    .catch(error => {
+
+      console.error(
+        "Fun facts error:",
+        error
+      );
+
+      facts = [];
+
+      renderFact();
+
+    });
+
+
+  // ============================================================
+  // HOROSCOPE
+  // ============================================================
+
+  fetch(`/api/horoscope?month=${currentMonth}`)
+    .then(response => {
+
+      if (!response.ok) {
+        throw new Error("Horoscope API failed");
+      }
+
+      return response.json();
+
+    })
+    .then(data => {
+
+      renderHoroscope(
+        Array.isArray(data)
+          ? data
+          : []
+      );
+
+    })
+    .catch(error => {
+
+      console.error(
+        "Horoscope error:",
+        error
+      );
+
+      renderHoroscope([]);
+
+    });
+
+
+  // ============================================================
+  // NEXT FUN FACT BUTTON
+  // ============================================================
+
+  const nextFact =
+    document.getElementById("nextFact");
+
+  if (nextFact) {
+
+    nextFact.onclick = () => {
+
+      if (facts.length) {
+
+        factIndex =
+          (factIndex + 1) % facts.length;
+
+        renderFact();
+
+      }
+
+    };
+
+  }
+
+}
+    function renderFact() {
 
       const box =
-        document.getElementById("trendingNews");
+        document.getElementById("funFacts");
 
-      if(!box) return;
+      if (!box) return;
 
+      if (!facts.length) {
 
-      if(!items.length){
+        box.innerHTML =
+          "<p>No fun facts published yet.</p>";
 
-        box.innerHTML = `
-          <p class="sidebar-loading">
-            No trending news available.
-          </p>
-        `;
+        const nextFact =
+          document.getElementById("nextFact");
+
+        if (nextFact) {
+          nextFact.style.display = "none";
+        }
 
         return;
       }
 
+      const x =
+        facts[factIndex];
 
-      box.innerHTML =
-        items
-          .slice(0,5)
-          .map(
-            (item,index) => `
+      box.innerHTML = `
 
-              <a
-                class="trending-item"
-                href="/${categorySlug(item.category)}/${articleUrlKey(item)}"
-              >
+        <div class="fact-category">
+          ${e(x.category || "")}
+        </div>
 
-                <div class="trending-number">
-                  ${String(index + 1).padStart(2,"0")}
+        <h3>
+          ${e(x.title || "")}
+        </h3>
+
+        <p class="fact-text">
+          ${e(x.fact || "")}
+        </p>
+
+        ${
+          x.source
+            ? `
+              <div class="fact-source">
+                Source: ${e(x.source)}
+              </div>
+            `
+            : ""
+        }
+
+      `;
+
+      const dots =
+        document.getElementById("factDots");
+
+      if (dots) {
+
+        dots.innerHTML =
+          facts
+            .slice(0, 8)
+            .map(
+              (_, i) => `
+                <button
+                  class="fact-dot ${
+                    i === factIndex
+                      ? "active"
+                      : ""
+                  }"
+                  aria-label="Fact ${i + 1}">
+                </button>
+              `
+            )
+            .join("");
+
+        dots
+          .querySelectorAll(".fact-dot")
+          .forEach((button, i) => {
+
+            button.onclick = () => {
+
+              factIndex = i;
+
+              renderFact();
+
+            };
+
+          });
+
+      }
+
+    }
+    function renderHoroscope(rows) {
+
+      const monthTitle =
+        document.getElementById("horoscopeMonthTitle");
+
+      const horoscopeBox =
+        document.getElementById("horoscope");
+
+      if (!horoscopeBox) return;
+
+
+      const monthName =
+        new Date().toLocaleString(
+          "en-IN",
+          {
+            month: "long",
+            year: "numeric",
+            timeZone: "Asia/Kolkata"
+          }
+        );
+
+
+      if (monthTitle) {
+
+        monthTitle.textContent =
+          monthName;
+
+      }
+
+
+      if (!Array.isArray(rows) || !rows.length) {
+
+        horoscopeBox.innerHTML = `
+          <p class="sidebar-loading">
+            No horoscope published for this month yet.
+          </p>
+        `;
+
+        return;
+
+      }
+
+
+      const bySign = {};
+
+      rows.forEach(item => {
+
+        if (item && item.sign) {
+
+          bySign[item.sign] =
+            item;
+
+        }
+
+      });
+
+
+      const availableSigns =
+        zodiacOrder.filter(
+          sign => bySign[sign]
+        );
+
+
+      const renderPreview = () => {
+
+        const previewSigns =
+          availableSigns.slice(0, 4);
+
+
+        horoscopeBox.innerHTML = `
+
+          <div class="horoscope-preview">
+
+            ${previewSigns.map(sign => {
+
+              const content =
+                bySign[sign].content || "";
+
+              const shortContent =
+                content.length > 90
+                  ? content.substring(0, 90) + "..."
+                  : content;
+
+              return `
+
+                <div class="zodiac compact-zodiac">
+
+                  <div class="zodiac-head">
+
+                    <span class="zodiac-sign">
+                      ${zodiacIcons[sign]}
+                      ${e(sign)}
+                    </span>
+
+                  </div>
+
+                  <p>
+                    ${e(shortContent)}
+                  </p>
+
                 </div>
 
+              `;
 
-                <div class="trending-content">
+            }).join("")}
 
-                  <h4>
-                    ${e(item.title)}
-                  </h4>
+          </div>
 
-                  <span>
-                    ${e(item.category || "News")}
+          <button
+            id="viewAllHoroscopes"
+            class="view-all-horoscope-btn"
+            type="button"
+          >
+            View All Horoscopes →
+          </button>
+
+        `;
+
+
+        const button =
+          document.getElementById(
+            "viewAllHoroscopes"
+          );
+
+
+        if (button) {
+
+          button.addEventListener(
+            "click",
+            renderAll
+          );
+
+        }
+
+      };
+
+
+      const renderAll = () => {
+
+        horoscopeBox.innerHTML = `
+
+          <div class="horoscope-preview">
+
+            ${availableSigns.map(sign => `
+
+              <div class="zodiac compact-zodiac">
+
+                <div class="zodiac-head">
+
+                  <span class="zodiac-sign">
+                    ${zodiacIcons[sign]}
+                    ${e(sign)}
                   </span>
 
                 </div>
 
-              </a>
+                <p>
+                  ${e(bySign[sign].content || "")}
+                </p>
 
-            `
-          )
-          .join("");
+              </div>
+
+            `).join("")}
+
+          </div>
+
+          <button
+            id="viewAllHoroscopes"
+            class="view-all-horoscope-btn"
+            type="button"
+          >
+            Show Less ↑
+          </button>
+
+        `;
+
+
+        const button =
+          document.getElementById(
+            "viewAllHoroscopes"
+          );
+
+
+        if (button) {
+
+          button.addEventListener(
+            "click",
+            renderPreview
+          );
+
+        }
+
+      };
+
+
+      renderPreview();
 
     }
+
+    go();
+
+// ============================================================
+// TRENDING NEWS
+// ============================================================
+
+function renderTrending(items) {
+
+  const box =
+    document.getElementById("trendingNews");
+
+  if (!box) return;
+
+
+  if (!Array.isArray(items) || !items.length) {
+
+    box.innerHTML = `
+      <p class="sidebar-loading">
+        No trending news available.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  box.innerHTML =
+    items
+      .slice(0, 5)
+      .map((item, index) => `
+
+        <a
+          class="trending-item"
+          href="/${categorySlug(item.category)}/${articleUrlKey(item)}"
+        >
+
+          <div class="trending-number">
+            ${String(index + 1).padStart(2, "0")}
+          </div>
+
+          <div class="trending-content">
+
+            <h4>
+              ${e(item.title)}
+            </h4>
+
+            <span>
+              ${e(item.category || "News")}
+            </span>
+
+          </div>
+
+        </a>
+
+      `)
+      .join("");
+
+}
+
+
 // ===== CP TIMES WEATHER =====
 const weatherCities = {
   "26.8467,80.9462": "Lucknow",
@@ -849,8 +1469,8 @@ setInterval(loadWeather, 15*60*1000);
 // NEWS SEARCH
 // ============================================================
 
-const searchToggle =
-  document.getElementById("searchToggle");
+const searchTrigger =
+  document.getElementById("searchTrigger");
 
 const searchPanel =
   document.getElementById("searchPanel");
@@ -864,12 +1484,15 @@ const newsSearchButton =
 const searchResults =
   document.getElementById("searchResults");
 
+const searchClose =
+  document.getElementById("searchClose");
+
 
 // Open / Close Search Panel
 
-if (searchToggle) {
+if (searchTrigger) {
 
-  searchToggle.addEventListener("click", () => {
+  searchTrigger.addEventListener("click", () => {
 
     searchPanel.classList.toggle("active");
 
@@ -887,6 +1510,32 @@ if (searchToggle) {
 
 }
 
+if (searchClose) {
+
+  searchClose.addEventListener(
+    "click",
+    () => {
+
+      searchPanel.classList.remove(
+        "active"
+      );
+
+      if (newsSearchInput) {
+
+        newsSearchInput.value = "";
+
+      }
+
+      if (searchResults) {
+
+        searchResults.innerHTML = "";
+
+      }
+
+    }
+  );
+
+}
 
 // Perform Search
 
@@ -952,22 +1601,22 @@ async function performNewsSearch() {
 
           <a
             class="search-result-item"
-            href="/article.html?slug=${encodeURIComponent(article.slug || "")}"
+            href="/${categorySlug(article.category)}/${articleUrlKey(article)}"
           >
 
             <img
-              src="${image}"
+              src="${e(image)}"
               alt=""
             >
 
             <div class="search-result-content">
 
               <div class="search-result-category">
-                ${article.category || "News"}
+                ${e(article.category || "News")}
               </div>
 
               <div class="search-result-title">
-                ${article.title || ""}
+                ${e(article.title || "")}
               </div>
 
             </div>
@@ -1028,164 +1677,6 @@ if (newsSearchInput) {
 
 }
 
-
-</script>
-
-
-<!-- SEARCH FUNCTIONALITY -->
-<script>
-
-document.addEventListener("DOMContentLoaded", function () {
-
-  console.log("Search system initialized");
-
-  const searchToggle = document.getElementById("searchToggle");
-  const searchPanel = document.getElementById("searchPanel");
-  const closeSearch = document.getElementById("closeSearch");
-  const newsSearchInput = document.getElementById("newsSearchInput");
-  const searchResults = document.getElementById("searchResults");
-
-
-  if (!searchToggle) {
-    console.error("Search button not found");
-    return;
-  }
-
-
-  // OPEN SEARCH PANEL
-
-  searchToggle.addEventListener("click", function () {
-
-    console.log("Search button clicked");
-
-    searchPanel.classList.add("active");
-
-    setTimeout(function () {
-
-      if (newsSearchInput) {
-        newsSearchInput.focus();
-      }
-
-    }, 100);
-
-  });
-
-
-
-
-  // SEARCH NEWS
-
-  let searchTimer;
-
-
-  if (newsSearchInput) {
-
-    newsSearchInput.addEventListener("input", function () {
-
-      clearTimeout(searchTimer);
-
-      const query = this.value.trim();
-
-
-      if (query.length < 2) {
-
-        searchResults.innerHTML = "";
-
-        return;
-
-      }
-
-
-      searchTimer = setTimeout(async function () {
-
-        try {
-
-          searchResults.innerHTML =
-            '<div class="search-empty">Searching...</div>';
-
-
-          const response = await fetch(
-            "/api/search?q=" + encodeURIComponent(query)
-          );
-
-
-          if (!response.ok) {
-
-            throw new Error("Search failed");
-
-          }
-
-
-          const articles = await response.json();
-
-
-          if (!articles || articles.length === 0) {
-
-            searchResults.innerHTML =
-              '<div class="search-empty">No news found.</div>';
-
-            return;
-
-          }
-
-
-          searchResults.innerHTML = articles.map(function (article) {
-
-            return `
-              <a
-                class="search-result-item"
-                href="/article.html?slug=${encodeURIComponent(article.slug || article.id)}"
-              >
-
-                <span class="search-result-category">
-                  ${escapeHtml(article.category || "News")}
-                </span>
-
-                <div class="search-result-title">
-                  ${escapeHtml(article.title || "")}
-                </div>
-
-                <div class="search-result-excerpt">
-                  ${escapeHtml(article.excerpt || "")}
-                </div>
-
-              </a>
-            `;
-
-          }).join("");
-
-
-        } catch (error) {
-
-          console.error("Search error:", error);
-
-          searchResults.innerHTML =
-            '<div class="search-empty">Unable to search news.</div>';
-
-        }
-
-      }, 400);
-
-    });
-
-  }
-
-
-  // SAFE HTML FUNCTION
-
-  function escapeHtml(value) {
-
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  }
-
-
-});
 
 </script>
 

@@ -982,6 +982,59 @@ img {
   font-weight: 700;
 }
 
+/* =========================================
+   COMPACT HOMEPAGE HOROSCOPE
+========================================= */
+
+.horoscope-preview {
+  display: grid;
+  gap: 8px;
+}
+
+.compact-zodiac {
+  padding: 8px 10px !important;
+  margin-bottom: 0 !important;
+}
+
+.compact-zodiac .zodiac-head {
+  margin-bottom: 3px;
+  font-size: 14px;
+}
+
+.compact-zodiac .zodiac-sign {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.compact-zodiac p {
+  margin: 0;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  color: #666;
+}
+
+.view-all-horoscope-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 9px 12px;
+
+  border: 1px solid #d71920;
+  background: transparent;
+  color: #d71920;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+  border-radius: 4px;
+
+  transition: all 0.2s ease;
+}
+
+.view-all-horoscope-btn:hover {
+  background: #d71920;
+  color: #fff;
+}
 
 /* ============================================================
    HOROSCOPE IMPROVEMENTS
@@ -1615,9 +1668,10 @@ main.container {
 
 }
 
-/* ============================================================
-   PHASE 6.2.1 - HEADER SEARCH BUTTON
-   ============================================================ */
+
+/* =========================================================
+   CP TIMES - SEARCH
+========================================================= */
 
 .header-actions{
   display:flex;
@@ -1625,41 +1679,319 @@ main.container {
   gap:18px;
 }
 
+
+/* =========================================================
+   SEARCH TRIGGER
+========================================================= */
+
 .search-trigger{
   display:flex;
   align-items:center;
+  justify-content:center;
   gap:7px;
 
-  background:transparent;
-  border:none;
-  cursor:pointer;
+  padding:8px 12px;
 
-  color:#374151;
-  font-size:14px;
-  font-weight:600;
-
-  padding:8px 10px;
+  border:1px solid var(--line);
   border-radius:6px;
 
-  transition:background .2s ease,color .2s ease;
+  background:#fff;
+  color:#333;
+
+  font-size:14px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:
+    background .2s ease,
+    color .2s ease,
+    border-color .2s ease;
 }
 
 .search-trigger:hover{
-  background:#f3f4f6;
-  color:#d71920;
+  background:#f7f7f7;
+  color:var(--red);
+  border-color:var(--red);
 }
 
 .search-icon{
-  font-size:22px;
+  font-size:17px;
   line-height:1;
-  font-weight:normal;
 }
 
-.login-link{
-  white-space:nowrap;
+.search-text{
+  font-size:13px;
 }
 
-/* Mobile */
+
+/* =========================================================
+   SEARCH OVERLAY
+========================================================= */
+
+.search-panel{
+  display:none;
+
+  position:fixed;
+
+  inset:0;
+
+  width:100%;
+  height:100vh;
+
+  background:rgba(18,24,38,.60);
+
+  z-index:9999;
+
+  align-items:flex-start;
+  justify-content:center;
+
+  padding-top:110px;
+}
+
+.search-panel.active{
+  display:flex;
+}
+
+
+/* =========================================================
+   SEARCH CONTAINER
+========================================================= */
+
+.search-container{
+  position:relative;
+
+  width:min(720px,92%);
+
+  background:#fff;
+
+  border-radius:10px;
+
+  padding:45px 24px 24px;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.30);
+}
+
+
+/* =========================================================
+   SEARCH INPUT ROW
+========================================================= */
+
+.search-box{
+  display:flex;
+
+  gap:10px;
+}
+
+#newsSearchInput{
+  flex:1;
+
+  min-width:0;
+
+  height:50px;
+
+  padding:0 16px;
+
+  border:1px solid #d9dde3;
+
+  border-radius:6px;
+
+  background:#fff;
+
+  color:#222;
+
+  font-size:16px;
+
+  outline:none;
+}
+
+#newsSearchInput:focus{
+  border-color:var(--red);
+
+  box-shadow:
+    0 0 0 3px rgba(215,25,32,.08);
+}
+
+
+/* =========================================================
+   SEARCH BUTTON
+========================================================= */
+
+#newsSearchButton{
+  height:50px;
+
+  padding:0 24px;
+
+  border:none;
+
+  border-radius:6px;
+
+  background:var(--red);
+
+  color:#fff;
+
+  font-size:14px;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:
+    background .2s ease,
+    transform .1s ease;
+}
+
+#newsSearchButton:hover{
+  background:var(--red-dark);
+}
+
+#newsSearchButton:active{
+  transform:translateY(1px);
+}
+
+
+/* =========================================================
+   SEARCH CLOSE BUTTON
+========================================================= */
+
+.search-close{
+  position:absolute;
+
+  top:12px;
+  right:12px;
+
+  width:36px;
+  height:36px;
+
+  border:none;
+
+  border-radius:50%;
+
+  background:#f3f4f6;
+
+  color:#333;
+
+  font-size:28px;
+
+  line-height:30px;
+
+  cursor:pointer;
+
+  transition:
+    background .2s ease,
+    color .2s ease;
+}
+
+.search-close:hover{
+  background:var(--red);
+
+  color:#fff;
+}
+
+
+/* =========================================================
+   SEARCH RESULTS
+========================================================= */
+
+.search-results{
+  margin-top:18px;
+
+  max-height:400px;
+
+  overflow-y:auto;
+}
+
+.search-result-item{
+  display:flex;
+
+  gap:14px;
+
+  padding:14px 0;
+
+  border-bottom:1px solid var(--line);
+
+  text-decoration:none;
+
+  transition:
+    background .2s ease;
+}
+
+.search-result-item:hover{
+  background:#f8f9fa;
+}
+
+.search-result-item img{
+  width:120px;
+  height:75px;
+
+  flex:none;
+
+  object-fit:cover;
+
+  border-radius:5px;
+}
+
+.search-result-content{
+  flex:1;
+
+  min-width:0;
+}
+
+.search-result-category{
+  display:block;
+
+  margin-bottom:5px;
+
+  color:var(--red);
+
+  font-size:11px;
+
+  font-weight:800;
+
+  text-transform:uppercase;
+}
+
+.search-result-title{
+  color:#121826;
+
+  font-size:16px;
+
+  font-weight:700;
+
+  line-height:1.35;
+}
+
+.search-result-excerpt{
+  margin-top:6px;
+
+  color:#6b7280;
+
+  font-size:13px;
+
+  line-height:1.45;
+}
+
+.search-result-empty{
+  padding:20px;
+
+  text-align:center;
+
+  color:#6b7280;
+}
+
+.search-empty{
+  padding:20px;
+
+  text-align:center;
+
+  color:#6b7280;
+}
+
+
+/* =========================================================
+   SEARCH - MOBILE
+========================================================= */
 
 @media(max-width:700px){
 
@@ -1676,550 +2008,38 @@ main.container {
   }
 
   .search-icon{
-    font-size:24px;
+    font-size:21px;
   }
-
-}
-
-/* =========================================================
-   NEWS SEARCH
-========================================================= */
-
-.mast-actions{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
-.search-toggle{
-  width:38px;
-  height:38px;
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:50%;
-  cursor:pointer;
-  font-size:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:.2s ease;
-}
-
-.search-toggle:hover{
-  background:var(--red);
-  color:#fff;
-  border-color:var(--red);
-}
-
-
-/* Search panel */
-
-.search-panel{
-  display:none;
-  width:100%;
-  background:#fff;
-  border-bottom:1px solid var(--line);
-  padding:18px 0;
-}
-
-.search-panel.active{
-  display:block;
-}
-
-.search-container{
-  width:min(900px,94%);
-  margin:auto;
-}
-
-.search-box{
-  display:flex;
-  gap:10px;
-}
-
-.search-box input{
-  flex:1;
-  height:46px;
-  padding:0 16px;
-  border:1px solid var(--line);
-  border-radius:5px;
-  font-size:15px;
-  outline:none;
-}
-
-.search-box input:focus{
-  border-color:var(--red);
-}
-
-.search-box button{
-  padding:0 24px;
-  border:none;
-  background:var(--red);
-  color:#fff;
-  border-radius:5px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.search-results{
-  margin-top:16px;
-}
-
-.search-result-item{
-  display:flex;
-  gap:14px;
-  padding:14px 0;
-  border-bottom:1px solid var(--line);
-  text-decoration:none;
-}
-
-.search-result-item img{
-  width:120px;
-  height:75px;
-  object-fit:cover;
-  border-radius:4px;
-}
-
-.search-result-content{
-  flex:1;
-}
-
-.search-result-category{
-  font-size:11px;
-  font-weight:bold;
-  color:var(--red);
-  text-transform:uppercase;
-}
-
-.search-result-title{
-  margin-top:5px;
-  font-size:17px;
-  font-weight:bold;
-  line-height:1.35;
-}
-
-.search-result-empty{
-  padding:20px 0;
-  color:var(--muted);
-}
-
-/* =========================================================
-   NEWS SEARCH
-========================================================= */
-
-.mast-actions{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
-.search-toggle{
-  width:38px;
-  height:38px;
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:50%;
-  cursor:pointer;
-  font-size:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:.2s ease;
-}
-
-.search-toggle:hover{
-  background:var(--red);
-  color:#fff;
-  border-color:var(--red);
-}
-
-
-/* Search panel */
-
-.search-panel{
-  display:none;
-  width:100%;
-  background:#fff;
-  border-bottom:1px solid var(--line);
-  padding:18px 0;
-}
-
-.search-panel.active{
-  display:block;
-}
-
-.search-container{
-  width:min(900px,94%);
-  margin:auto;
-}
-
-.search-box{
-  display:flex;
-  gap:10px;
-}
-
-.search-box input{
-  flex:1;
-  height:46px;
-  padding:0 16px;
-  border:1px solid var(--line);
-  border-radius:5px;
-  font-size:15px;
-  outline:none;
-}
-
-.search-box input:focus{
-  border-color:var(--red);
-}
-
-.search-box button{
-  padding:0 24px;
-  border:none;
-  background:var(--red);
-  color:#fff;
-  border-radius:5px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.search-results{
-  margin-top:16px;
-}
-
-.search-result-item{
-  display:flex;
-  gap:14px;
-  padding:14px 0;
-  border-bottom:1px solid var(--line);
-  text-decoration:none;
-}
-
-.search-result-item img{
-  width:120px;
-  height:75px;
-  object-fit:cover;
-  border-radius:4px;
-}
-
-.search-result-content{
-  flex:1;
-}
-
-.search-result-category{
-  font-size:11px;
-  font-weight:bold;
-  color:var(--red);
-  text-transform:uppercase;
-}
-
-.search-result-title{
-  margin-top:5px;
-  font-size:17px;
-  font-weight:bold;
-  line-height:1.35;
-}
-
-.search-result-empty{
-  padding:20px 0;
-  color:var(--muted);
-}
-
-/* =====================================================
-   SEARCH PANEL
-===================================================== */
-
-.search-panel{
-  display:none;
-  position:fixed;
-  top:88px;
-  left:0;
-  width:100%;
-  min-height:150px;
-  background:#ffffff;
-  border-bottom:2px solid #e5e7eb;
-  box-shadow:0 10px 25px rgba(0,0,0,.15);
-  z-index:9999;
-}
-
-.search-panel.active{
-  display:block !important;
-}
-
-.search-panel-inner{
-  padding-top:20px;
-  padding-bottom:25px;
-}
-
-.search-box{
-  position:relative;
-  max-width:850px;
-  margin:auto;
-}
-
-.search-box input{
-  width:100%;
-  height:52px;
-  padding:0 55px 0 18px;
-  border:1px solid #d1d5db;
-  border-radius:6px;
-  font-size:16px;
-  outline:none;
-}
-
-.search-box input:focus{
-  border-color:#d71920;
-}
-
-.close-search{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  border:none;
-  background:none;
-  font-size:28px;
-  cursor:pointer;
-}
-
-.search-results{
-  max-width:850px;
-  margin:15px auto 0;
-  max-height:500px;
-  overflow-y:auto;
-}
-
-.search-result-item{
-  display:block;
-  padding:15px;
-  border-bottom:1px solid #e5e7eb;
-  text-decoration:none;
-}
-
-.search-result-item:hover{
-  background:#f7f7f7;
-}
-
-.search-result-category{
-  display:block;
-  color:#d71920;
-  font-size:11px;
-  font-weight:bold;
-  margin-bottom:5px;
-}
-
-.search-result-title{
-  font-size:17px;
-  font-weight:bold;
-  color:#121826;
-}
-
-.search-result-excerpt{
-  margin-top:6px;
-  color:#6b7280;
-  font-size:13px;
-}
-
-.search-empty{
-  padding:20px;
-  text-align:center;
-  color:#6b7280;
-}
-
-/* =========================================================
-   PHASE 5 - SEARCH OVERLAY
-========================================================= */
-
-.search-panel{
-  display:none;
-  position:fixed;
-
-  top:0;
-  left:0;
-
-  width:100%;
-  height:100vh;
-
-  background:rgba(18,24,38,.60);
-
-  z-index:9999;
-
-  align-items:flex-start;
-  justify-content:center;
-
-  padding-top:110px;
-}
-
-
-/* Show search panel */
-
-.search-panel.active{
-  display:flex;
-}
-
-
-/* Search popup */
-
-.search-container{
-  width:min(720px,92%);
-  background:#fff;
-
-  border-radius:10px;
-
-  padding:45px 24px 24px;
-
-  box-shadow:0 20px 60px rgba(0,0,0,.30);
-}
-
-
-/* Search input and button row */
-
-.search-box{
-  display:flex;
-  gap:10px;
-}
-
-
-/* Search input */
-
-#newsSearchInput{
-  flex:1;
-
-  height:50px;
-
-  padding:0 16px;
-
-  border:1px solid #d9dde3;
-  border-radius:6px;
-
-  font-size:16px;
-
-  outline:none;
-}
-
-
-#newsSearchInput:focus{
-  border-color:var(--red);
-  box-shadow:0 0 0 3px rgba(215,25,32,.08);
-}
-
-
-/* Search button inside popup */
-
-#newsSearchButton{
-  height:50px;
-
-  padding:0 24px;
-
-  border:none;
-  border-radius:6px;
-
-  background:var(--red);
-  color:#fff;
-
-  font-size:14px;
-  font-weight:700;
-
-  cursor:pointer;
-
-  transition:all .2s ease;
-}
-
-
-#newsSearchButton:hover{
-  background:var(--red-dark);
-}
-
-
-/* Search results */
-
-.search-results{
-  margin-top:18px;
-
-  max-height:400px;
-  overflow-y:auto;
-}
-
-@media(max-width:700px){
 
   .search-panel{
     padding-top:80px;
   }
 
-
   .search-container{
     width:94%;
-    padding:16px;
-  }
 
+    padding:45px 16px 20px;
+  }
 
   .search-box{
     flex-direction:column;
   }
 
-
   #newsSearchButton{
     width:100%;
   }
 
-}
+  .search-result-item img{
+    width:90px;
+    height:65px;
+  }
 
-.search-container{
-  position:relative;
-}
+  .search-result-title{
+    font-size:14px;
+  }
 
+  .search-result-excerpt{
+    font-size:12px;
+  }
 
-.search-close{
-  position:absolute;
-
-  top:6px;
-  right:10px;
-
-  width:32px;
-  height:32px;
-
-  border:none;
-  background:transparent;
-
-  font-size:26px;
-  line-height:1;
-
-  color:#6b7280;
-
-  cursor:pointer;
-}
-
-
-.search-close:hover{
-  color:var(--red);
-}
-
-/* Search Close Button */
-
-.search-container{
-  position:relative;
-}
-
-.search-close{
-  position:absolute;
-  top:12px;
-  right:12px;
-
-  width:36px;
-  height:36px;
-
-  border:none;
-  background:#f3f4f6;
-
-  color:#333;
-  font-size:28px;
-  line-height:30px;
-
-  border-radius:50%;
-  cursor:pointer;
-
-  transition:all .2s ease;
-}
-
-.search-close:hover{
-  background:var(--red);
-  color:#fff;
 }
