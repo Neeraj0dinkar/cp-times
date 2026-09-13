@@ -538,23 +538,45 @@ main.container{
 <div class="breaking"><div class="container breaking-inner"><strong>BREAKING</strong><span id="b">Loading...</span></div></div>
 
 <main class="container">
+
   <section class="top-grid">
+
+    <!-- HERO -->
     <section id="hero" class="hero">
       <div class="hero-overlay"></div>
+
       <div class="hero-content">
         <span class="tag">TOP STORY</span>
+
         <h1>CP Times — your digital newsroom</h1>
-        <p>India, Uttar Pradesh, world, business, technology, sports and entertainment.</p>
-        <span class="read-story">Read full story →</span>
+
+        <p>
+          India, Uttar Pradesh, world, business, technology, sports and entertainment.
+        </p>
+
+        <span class="read-story">
+          Read full story →
+        </span>
       </div>
     </section>
 
+
+    <!-- RIGHT SIDEBAR -->
     <aside class="right-rail">
 
       <section class="rail-card weather-card">
+
         <div class="rail-head">
-          <div><span class="rail-icon">☀</span><span>WEATHER</span></div>
-          <select id="weatherCity" class="weather-city" aria-label="Select city">
+          <div>
+            <span class="rail-icon">☀</span>
+            <span>WEATHER</span>
+          </div>
+
+          <select
+            id="weatherCity"
+            class="weather-city"
+            aria-label="Select city"
+          >
             <option value="26.8467,80.9462">Lucknow</option>
             <option value="28.6139,77.2090">New Delhi</option>
             <option value="25.3176,82.9739">Varanasi</option>
@@ -562,10 +584,15 @@ main.container{
             <option value="26.4499,80.3319">Kanpur</option>
           </select>
         </div>
+
         <div id="weatherBox" class="weather-box">
-          <div class="weather-loading">Loading weather...</div>
+          <div class="weather-loading">
+            Loading weather...
+          </div>
         </div>
+
       </section>
+
 
       <!-- TRENDING NEWS -->
 
@@ -588,42 +615,121 @@ main.container{
 
       </section>
 
+
+      <!-- FUN FACTS -->
+
       <section class="rail-card fun-card">
+
         <div class="rail-head">
-          <div><span class="rail-icon">★</span><span>CV FUN FACTS</span></div>
-          <span class="rail-label">DID YOU KNOW?</span>
+          <div>
+            <span class="rail-icon">★</span>
+            <span>CV FUN FACTS</span>
+          </div>
+
+          <span class="rail-label">
+            DID YOU KNOW?
+          </span>
         </div>
+
         <div class="fact-wrap">
-          <div id="funFacts"><p class="sidebar-loading">Loading facts...</p></div>
+
+          <div id="funFacts">
+            <p class="sidebar-loading">
+              Loading facts...
+            </p>
+          </div>
+
         </div>
+
         <div class="fact-controls">
-          <div id="factDots" class="fact-dots"></div>
-          <button id="nextFact" class="icon-next" aria-label="Next fact">→</button>
+
+          <div
+            id="factDots"
+            class="fact-dots"
+          ></div>
+
+          <button
+            id="nextFact"
+            class="icon-next"
+            aria-label="Next fact"
+          >
+            →
+          </button>
+
         </div>
+
       </section>
+
+
+      <!-- HOROSCOPE -->
 
       <section class="rail-card horoscope-card">
+
         <div class="rail-head">
-          <div><span class="rail-icon">✦</span><span>MONTHLY HOROSCOPE</span></div>
-          <span id="horoscopeMonthTitle" class="rail-label"></span>
+
+          <div>
+            <span class="rail-icon">✦</span>
+            <span>MONTHLY HOROSCOPE</span>
+          </div>
+
+          <span
+            id="horoscopeMonthTitle"
+            class="rail-label"
+          ></span>
+
         </div>
-        <div id="horoscope" class="horoscope-list">
-          <p class="sidebar-loading">Loading horoscope...</p>
+
+        <div
+          id="horoscope"
+          class="horoscope-list"
+        >
+          <p class="sidebar-loading">
+            Loading horoscope...
+          </p>
         </div>
-        <p class="horoscope-note">Entertainment feature • Not a scientific prediction</p>
+
+        <p class="horoscope-note">
+          Entertainment feature • Not a scientific prediction
+        </p>
+
       </section>
+
     </aside>
+
+
+    <!-- LATEST NEWS -->
+    <section class="latest-section">
+
+      <div class="section-heading">
+        <h2>Latest News</h2>
+        <span>Latest stories from CP Times</span>
+      </div>
+
+      <div
+        id="list"
+        class="news-list"
+      ></div>
+
+    </section>
+
   </section>
 
-  <section class="latest-section">
-    <div class="section-heading"><h2>Latest News</h2><span>Latest stories from CP Times</span></div>
-    <div id="list" class="news-list"></div>
-  </section>
+
+  <!-- BOTTOM PROMO -->
 
   <section class="bottom-promo">
-    <div class="ad">ADVERTISEMENT</div>
-    <div><h2>CP Times on YouTube</h2><div id="yt"></div></div>
+
+    <div class="ad">
+      ADVERTISEMENT
+    </div>
+
+    <div>
+      <h2>CP Times on YouTube</h2>
+      <div id="yt"></div>
+    </div>
+
   </section>
+
 </main>
 
 <script>

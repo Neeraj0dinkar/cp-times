@@ -3059,3 +3059,89 @@ body:has(.article) .mast {
   }
 
 }
+
+/* =========================================================
+   HOMEPAGE PROFESSIONAL TOP LAYOUT
+   Keeps Latest News directly below Hero
+   while the right sidebar continues independently.
+   ========================================================= */
+
+.top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3.15fr) minmax(320px, 1fr);
+  grid-template-areas:
+    "hero rail"
+    "latest rail";
+  gap: 28px;
+  align-items: start;
+}
+
+.top-grid > #hero {
+  grid-area: hero;
+  min-width: 0;
+}
+
+.top-grid > .right-rail {
+  grid-area: rail;
+  min-width: 0;
+}
+
+.top-grid > .latest-section {
+  grid-area: latest;
+  min-width: 0;
+  margin-top: 0;
+}
+
+
+/* Keep Latest News visually connected to Hero */
+
+.top-grid > .latest-section .section-heading {
+  margin-top: 0;
+}
+
+
+/* Prevent the news cards from creating overflow */
+
+.top-grid > .latest-section .news-list {
+  min-width: 0;
+}
+
+
+/* Desktop sidebar remains independent */
+
+@media (min-width: 1001px) {
+
+  .top-grid > .right-rail {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET / MOBILE
+   Stack everything naturally on smaller screens.
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  .top-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "rail"
+      "latest";
+    gap: 22px;
+  }
+
+  .top-grid > .right-rail {
+    position: static;
+  }
+
+  .top-grid > .latest-section {
+    margin-top: 0;
+  }
+
+}
