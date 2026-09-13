@@ -2620,3 +2620,202 @@ button:hover {
   }
 
 }
+
+/* =========================================================
+   CP TIMES ADMIN - FORM EDITOR
+   Better input sizes and resizable text areas
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   ADMIN ARTICLE FORM
+   --------------------------------------------------------- */
+
+#articleForm {
+  width: 100%;
+  max-width: 100%;
+}
+
+#articleForm label {
+  display: block;
+  margin-top: 18px;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* ---------------------------------------------------------
+   ALL ADMIN INPUTS
+   --------------------------------------------------------- */
+
+#articleForm .input,
+#bf .input,
+#sf .input {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #121826;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------
+   ARTICLE TEXT AREAS
+   --------------------------------------------------------- */
+
+#articleForm textarea.input,
+#sf textarea.input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  resize: vertical;
+}
+
+/* ---------------------------------------------------------
+   EXCERPT
+   --------------------------------------------------------- */
+
+#articleForm textarea[name="excerpt"] {
+  min-height: 150px;
+  max-height: 450px;
+}
+
+/* ---------------------------------------------------------
+   ARTICLE BODY
+   Large editing area for news content
+   --------------------------------------------------------- */
+
+#articleForm textarea[name="body"] {
+  min-height: 450px;
+  max-height: 900px;
+  overflow-y: auto;
+  resize: vertical;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+/* ---------------------------------------------------------
+   FOCUS STATE
+   --------------------------------------------------------- */
+
+#articleForm .input:focus,
+#bf .input:focus,
+#sf .input:focus {
+  outline: none;
+  border-color: #d71920;
+  box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.10);
+}
+
+/* ---------------------------------------------------------
+   IMAGE FILE INPUT
+   --------------------------------------------------------- */
+
+#articleForm input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 9px;
+  min-height: 44px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+}
+
+/* ---------------------------------------------------------
+   FEATURED CHECKBOX
+   --------------------------------------------------------- */
+
+#articleForm label:has(input[name="featured"]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+#articleForm input[name="featured"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------
+   SAVE BUTTON
+   --------------------------------------------------------- */
+
+#articleForm button[type="submit"],
+#articleForm .btn.red {
+  margin-top: 18px;
+}
+
+/* ---------------------------------------------------------
+   BREAKING NEWS
+   --------------------------------------------------------- */
+
+#bf {
+  width: 100%;
+}
+
+#bf .input {
+  margin-bottom: 10px;
+}
+
+/* ---------------------------------------------------------
+   CHANNEL SETTINGS
+   --------------------------------------------------------- */
+
+#sf textarea[name="primary_ad_code"] {
+  min-height: 220px;
+  max-height: 600px;
+  resize: vertical;
+  overflow-y: auto;
+}
+
+/* ---------------------------------------------------------
+   ADMIN PANELS
+   --------------------------------------------------------- */
+
+.admin-grid .panel {
+  min-width: 0;
+}
+
+.admin-grid {
+  align-items: start;
+}
+
+.admin-grid .panel {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------
+   MOBILE ADMIN FORM
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+
+  #articleForm textarea[name="body"] {
+    min-height: 400px;
+  }
+
+  #articleForm textarea[name="excerpt"] {
+    min-height: 130px;
+  }
+
+  #sf textarea[name="primary_ad_code"] {
+    min-height: 180px;
+  }
+
+  #articleForm .input,
+  #bf .input,
+  #sf .input {
+    font-size: 16px;
+  }
+
+}
