@@ -1927,7 +1927,7 @@ ${JSON.stringify(ld).replace(
 
 <a href="/">
 <img
-  src="/cv-news-logo.jpeg"
+  src="/CP_Times_logo_New_transparent.png"
   alt="CP Times"
 />
 </a>
