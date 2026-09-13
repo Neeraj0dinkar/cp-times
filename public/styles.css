@@ -2061,3 +2061,17 @@ main.container {
   text-transform: uppercase;
   letter-spacing: .4px;
 }
+
+/* =========================================================
+   LATEST NEWS - CONSISTENT CARD ALIGNMENT
+   ========================================================= */
+
+.news-list .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.news-list .card .meta {
+  margin-top: auto;
+}
