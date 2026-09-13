@@ -2087,3 +2087,22 @@ main.container {
 .breaking strong {
   color: #fff;
 }
+
+/* =========================================================
+   CP TIMES LOGO - HEADER SIZE
+   ========================================================= */
+
+.mast img {
+  width: 190px;
+  height: 68px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Keep the logo compact on mobile */
+@media (max-width: 700px) {
+  .mast img {
+    width: 150px;
+    height: 55px;
+  }
+}
