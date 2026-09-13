@@ -2075,3 +2075,15 @@ main.container {
 .news-list .card .meta {
   margin-top: auto;
 }
+
+/* =========================================================
+   BREAKING NEWS - IMPROVE READABILITY
+   ========================================================= */
+
+.breaking {
+  color: #1f2937;
+}
+
+.breaking strong {
+  color: #fff;
+}
