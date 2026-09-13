@@ -572,16 +572,87 @@ main.container{
             <span>WEATHER</span>
           </div>
 
-          <select
-            id="weatherCity"
-            class="weather-city"
-            aria-label="Select city"
-          >
-            <option value="26.8467,80.9462">Lucknow</option>
-            <option value="28.6139,77.2090">New Delhi</option>
-            <option value="25.3176,82.9739">Varanasi</option>
-            <option value="27.1767,78.0081">Agra</option>
-            <option value="26.4499,80.3319">Kanpur</option>
+          <select id="weatherCity" class="weather-city" aria-label="Select city">
+
+            <optgroup label="States">
+
+              <option value="16.5062,80.6480">Amaravati — Andhra Pradesh</option>
+              <option value="27.0844,93.6053">Itanagar — Arunachal Pradesh</option>
+              <option value="26.1433,91.7898">Dispur — Assam</option>
+              <option value="25.5941,85.1376">Patna — Bihar</option>
+              <option value="21.2514,81.6296">Raipur — Chhattisgarh</option>
+              <option value="15.4909,73.8278">Panaji — Goa</option>
+              <option value="23.2156,72.6369">Gandhinagar — Gujarat</option>
+              <option value="30.7333,76.7794">Chandigarh — Haryana</option>
+              <option value="31.1048,77.1734">Shimla — Himachal Pradesh</option>
+              <option value="23.3441,85.3096">Ranchi — Jharkhand</option>
+              <option value="12.9716,77.5946">Bengaluru — Karnataka</option>
+              <option value="8.5241,76.9366">Thiruvananthapuram — Kerala</option>
+              <option value="23.2599,77.4126">Bhopal — Madhya Pradesh</option>
+
+              <!-- Existing Maharashtra city -->
+              <option value="19.0760,72.8777">Mumbai — Maharashtra</option>
+
+              <option value="24.8170,93.9368">Imphal — Manipur</option>
+              <option value="25.5788,91.8933">Shillong — Meghalaya</option>
+              <option value="23.7271,92.7176">Aizawl — Mizoram</option>
+              <option value="25.6751,94.1086">Kohima — Nagaland</option>
+              <option value="20.2961,85.8245">Bhubaneswar — Odisha</option>
+              <option value="30.7333,76.7794">Chandigarh — Punjab</option>
+              <option value="26.9124,75.7873">Jaipur — Rajasthan</option>
+              <option value="27.3389,88.6065">Gangtok — Sikkim</option>
+              <option value="13.0827,80.2707">Chennai — Tamil Nadu</option>
+              <option value="17.3850,78.4867">Hyderabad — Telangana</option>
+              <option value="23.8315,91.2868">Agartala — Tripura</option>
+
+              <!-- Existing Uttar Pradesh city -->
+              <option value="26.8467,80.9462">Lucknow — Uttar Pradesh</option>
+              <option value="28.6139,77.2090">New Delhi</option>
+              <option value="25.3176,82.9739">Varanasi — Uttar Pradesh</option>
+              <option value="27.1767,78.0081">Agra — Uttar Pradesh</option>
+              <option value="26.4499,80.3319">Kanpur — Uttar Pradesh</option>
+              <option value="30.3165,78.0322">Dehradun — Uttarakhand</option>
+              <option value="22.5726,88.3639">Kolkata — West Bengal</option>
+
+            </optgroup>
+
+
+            <optgroup label="Union Territories">
+
+              <option value="11.6234,92.7265">
+                Port Blair — Andaman & Nicobar Islands
+              </option>
+
+              <option value="30.7333,76.7794">
+                Chandigarh — Chandigarh
+              </option>
+
+              <option value="20.3974,72.8328">
+                Daman — Dadra & Nagar Haveli and Daman & Diu
+              </option>
+
+              <option value="28.6139,77.2090">
+                New Delhi — Delhi
+              </option>
+
+              <option value="34.0837,74.7973">
+                Srinagar — Jammu & Kashmir
+              </option>
+
+              <option value="34.1526,77.5771">
+                Leh — Ladakh
+              </option>
+
+              <option value="10.5667,72.6420">
+                Kavaratti — Lakshadweep
+              </option>
+
+              <option value="11.9416,79.8083">
+                Puducherry — Puducherry
+              </option>
+
+            </optgroup>
+
           </select>
         </div>
 
@@ -1624,7 +1695,11 @@ async function loadWeather(){
   if(!box || !selector) return;
 
   const [lat,lon]=selector.value.split(",");
-  const place=weatherCities[selector.value] || "Lucknow";
+  const place =
+    selector.options[selector.selectedIndex].textContent
+      .trim()
+      .split("—")[0]
+      .trim() || "Lucknow";
 
   box.innerHTML='<div class="weather-loading">Updating weather...</div>';
 
