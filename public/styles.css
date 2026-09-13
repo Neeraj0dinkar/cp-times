@@ -2106,3 +2106,68 @@ main.container {
     height: 55px;
   }
 }
+
+/* =========================================================
+   CP TIMES - NAVIGATION POLISH
+   ========================================================= */
+
+.nav {
+  background: #fff;
+}
+
+.nav-inner {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 34px;
+}
+
+.nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 54px;
+  padding: 0;
+  color: #121826;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .15px;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+
+.nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform .2s ease;
+}
+
+.nav a:hover {
+  color: var(--red);
+}
+
+.nav a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Keep mobile navigation behavior unchanged */
+@media (max-width: 700px) {
+  .nav-inner {
+    gap: 18px;
+    min-height: 48px;
+    overflow-x: auto;
+  }
+
+  .nav a {
+    height: 48px;
+    flex: 0 0 auto;
+    font-size: 13px;
+  }
+}
