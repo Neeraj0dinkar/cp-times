@@ -901,16 +901,42 @@ async function go() {
         showHeroStory(heroIndex);
 
 
+        // // Change hero story every 5 seconds
+        // setInterval(() => {
+
+        //   heroIndex =
+        //     (heroIndex + 1) % a.length;
+
+        //   showHeroStory(heroIndex);
+
+        // }, 5000);
         // Change hero story every 5 seconds
-        setInterval(() => {
+        let heroTimer = null;
 
-          heroIndex =
-            (heroIndex + 1) % a.length;
+        function startHeroRotation() {
+          if (heroTimer) return;
 
-          showHeroStory(heroIndex);
+          heroTimer = setInterval(() => {
+            heroIndex = (heroIndex + 1) % a.length;
+            showHeroStory(heroIndex);
+          }, 5000);
+        }
 
-        }, 5000);
+        function stopHeroRotation() {
+          if (heroTimer) {
+            clearInterval(heroTimer);
+            heroTimer = null;
+          }
+        }
 
+        // Start automatic rotation
+        startHeroRotation();
+
+        // Pause rotation when mouse is over the hero
+        hero.addEventListener("mouseenter", stopHeroRotation);
+
+        // Resume rotation when mouse leaves the hero
+        hero.addEventListener("mouseleave", startHeroRotation);
       }
 
       // If you want to disable the hero rotation and just show the first story, you can comment out the above setInterval code and use the following instead:
