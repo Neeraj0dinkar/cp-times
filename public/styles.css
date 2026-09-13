@@ -2171,3 +2171,29 @@ main.container {
     font-size: 13px;
   }
 }
+
+/* =========================================================
+   CP TIMES - HERO BUTTON POLISH
+   ========================================================= */
+
+.hero .hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 17px;
+  border-radius: 6px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  transition:
+    transform .2s ease,
+    background .2s ease,
+    box-shadow .2s ease;
+}
+
+.hero .hero-cta:hover {
+  background: var(--red-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(215, 25, 32, .25);
+}
