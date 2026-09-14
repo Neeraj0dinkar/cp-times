@@ -3145,3 +3145,131 @@ body:has(.article) .mast {
   }
 
 }
+
+/* ============================================================
+   FUN FACTS - PROFESSIONAL NEWS PORTAL CARD
+   ============================================================ */
+
+.fun-card {
+  overflow: hidden;
+}
+
+.fun-card .fact-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.fun-card .fact-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fun-card .fact-icon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  border-radius: 50%;
+  background: #fff1f2;
+  color: #d71920;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.fun-card .fact-brand-title {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: .3px;
+  color: #18202f;
+}
+
+.fun-card .fact-tagline {
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #7b8494;
+  letter-spacing: .25px;
+}
+
+.fun-card .fact-know {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #d71920;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.fun-card .fact-explore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 16px;
+  border: 1px solid #d71920;
+  border-radius: 999px;
+  background: #fff;
+  color: #d71920;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  transition: all .2s ease;
+}
+
+.fun-card .fact-explore:hover {
+  background: #d71920;
+  color: #fff;
+}
+
+.fun-card .fact-explore-arrow {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.fun-card .fact-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 14px 14px;
+}
+
+.fun-card .fact-bottom .fact-controls {
+  padding: 0;
+  flex: 1;
+}
+
+@media (max-width: 700px) {
+
+  .fun-card .fact-know {
+    font-size: 8px;
+    padding: 0 9px;
+  }
+
+  .fun-card .fact-brand-title {
+    font-size: 17px;
+  }
+
+  .fun-card .fact-tagline {
+    font-size: 9px;
+  }
+
+  .fun-card .fact-explore {
+    font-size: 10px;
+    padding: 0 12px;
+  }
+
+}

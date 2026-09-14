@@ -694,7 +694,7 @@ main.container{
         <div class="rail-head">
           <div>
             <span class="rail-icon">★</span>
-            <span>CV FUN FACTS</span>
+            <span>FUN FACTS</span>
           </div>
 
           <span class="rail-label">
@@ -1098,62 +1098,259 @@ async function go() {
     });
 
 
-  // ============================================================
-  // BREAKING NEWS
-  // ============================================================
+// ============================================================
+// BREAKING NEWS
+// ============================================================
 
-  fetch("/api/breaking")
-    .then(response => {
+fetch("/api/breaking")
+  .then(response => {
 
-      if (!response.ok) {
-        throw new Error("Breaking API failed");
-      }
+    if (!response.ok) {
+      throw new Error("Breaking API failed");
+    }
 
-      return response.json();
+    return response.json();
 
-    })
-    .then(breakingNews => {
+  })
+  .then(breakingNews => {
 
-      const breaking =
-        document.getElementById("b");
+    const breaking =
+      document.getElementById("b");
 
-      if (!breaking) return;
+    if (!breaking) return;
 
-      if (
-        Array.isArray(breakingNews) &&
-        breakingNews.length &&
-        breakingNews[0].headline
-      ) {
+    if (
+      !Array.isArray(breakingNews) ||
+      !breakingNews.length
+    ) {
 
-        breaking.textContent =
-          breakingNews[0].headline;
+      breaking.textContent =
+        "Latest news updates from CP Times";
 
-      } else {
+      return;
 
-        breaking.textContent =
-          "Latest news updates from CP Times";
+    }
 
-      }
-
-    })
-    .catch(error => {
-
-      console.error(
-        "Breaking news error:",
-        error
+    // Keep only breaking news entries that have a headline
+    const newsItems =
+      breakingNews.filter(
+        item =>
+          item &&
+          item.headline
       );
 
-      const breaking =
-        document.getElementById("b");
+    if (!newsItems.length) {
 
-      if (breaking) {
+      breaking.textContent =
+        "Latest news updates from CP Times";
 
-        breaking.textContent =
-          "Latest news updates from CP Times";
+      return;
+
+    }
+
+    let breakingIndex = 0;
+    let breakingTimer = null;
+    let breakingPaused = false;
+
+    // ----------------------------------------------------------
+    // Show one breaking headline
+    // ----------------------------------------------------------
+
+    function showBreakingNews(index) {
+
+      const item =
+        newsItems[index];
+
+      if (!item) return;
+
+      breaking.textContent =
+        item.headline;
+
+      // Make the headline clickable
+      breaking.style.cursor = "pointer";
+
+      breaking.onclick = async () => {
+
+        try {
+
+          const searchResponse =
+            await fetch(
+              "/api/search?q=" +
+              encodeURIComponent(
+                item.headline
+              )
+            );
+
+          if (!searchResponse.ok) {
+            throw new Error(
+              "Article search failed"
+            );
+          }
+
+          const results =
+            await searchResponse.json();
+
+          if (
+            Array.isArray(results) &&
+            results.length
+          ) {
+
+            const article =
+              results[0];
+
+            const category =
+              String(
+                article.category || "india"
+              )
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, "-");
+
+            const articleKey =
+              String(
+                article.slug || ""
+              ).trim();
+
+            if (articleKey) {
+
+              window.location.href =
+                "/" +
+                category +
+                "/" +
+                encodeURIComponent(
+                  articleKey
+                );
+
+              return;
+
+            }
+
+          }
+
+          console.warn(
+            "No matching article found for breaking news:",
+            item.headline
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Breaking news click error:",
+            error
+          );
+
+        }
+
+      };
+
+    }
+
+    // ----------------------------------------------------------
+    // Start automatic rotation
+    // ----------------------------------------------------------
+
+    function startBreakingRotation() {
+
+      if (
+        breakingTimer ||
+        breakingPaused ||
+        newsItems.length <= 1
+      ) {
+        return;
+      }
+
+      breakingTimer =
+        setInterval(() => {
+
+          breakingIndex =
+            (breakingIndex + 1) %
+            newsItems.length;
+
+          showBreakingNews(
+            breakingIndex
+          );
+
+        }, 5000);
+
+    }
+
+    // ----------------------------------------------------------
+    // Stop automatic rotation
+    // ----------------------------------------------------------
+
+    function stopBreakingRotation() {
+
+      if (breakingTimer) {
+
+        clearInterval(
+          breakingTimer
+        );
+
+        breakingTimer = null;
 
       }
 
-    });
+    }
+
+    // ----------------------------------------------------------
+    // Show first headline immediately
+    // ----------------------------------------------------------
+
+    showBreakingNews(
+      breakingIndex
+    );
+
+    startBreakingRotation();
+
+    // ----------------------------------------------------------
+    // Pause while mouse is over Breaking News
+    // ----------------------------------------------------------
+
+    breaking.addEventListener(
+      "mouseenter",
+      () => {
+
+        breakingPaused = true;
+
+        stopBreakingRotation();
+
+      }
+    );
+
+    // ----------------------------------------------------------
+    // Resume when mouse leaves
+    // ----------------------------------------------------------
+
+    breaking.addEventListener(
+      "mouseleave",
+      () => {
+
+        breakingPaused = false;
+
+        startBreakingRotation();
+
+      }
+    );
+
+  })
+  .catch(error => {
+
+    console.error(
+      "Breaking news error:",
+      error
+    );
+
+    const breaking =
+      document.getElementById("b");
+
+    if (breaking) {
+
+      breaking.textContent =
+        "Latest news updates from CP Times";
+
+    }
+
+  });
 
 
   // ============================================================
