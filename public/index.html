@@ -693,7 +693,7 @@ main.container{
 
         <div class="rail-head">
           <div>
-            <span class="rail-icon">★</span>
+            <span class="rail-icon">💡</span>
             <span>FUN FACTS</span>
           </div>
 
@@ -736,17 +736,18 @@ main.container{
 
       <section class="rail-card horoscope-card">
 
-        <div class="rail-head">
+        <div class="rail-head horoscope-header">
 
-          <div>
+          <div class="horoscope-title">
             <span class="rail-icon">✦</span>
-            <span>MONTHLY HOROSCOPE</span>
-          </div>
 
-          <span
-            id="horoscopeMonthTitle"
-            class="rail-label"
-          ></span>
+            <span
+              id="horoscopeMonthTitle"
+              class="horoscope-month-title"
+            >
+              HOROSCOPE
+            </span>
+          </div>
 
         </div>
 
@@ -1514,7 +1515,7 @@ fetch("/api/breaking")
       if (!facts.length) {
 
         box.innerHTML =
-          "<p>No fun facts published yet.</p>";
+          "<p class=\"sidebar-loading\">No fun facts published yet.</p>";
 
         const nextFact =
           document.getElementById("nextFact");
@@ -1529,25 +1530,30 @@ fetch("/api/breaking")
       const x =
         facts[factIndex];
 
+      /*
+      * Professional editorial layout:
+      * - Category as small kicker
+      * - Fact itself as the main headline
+      * - Source shown subtly below
+      * - Existing title is intentionally not displayed
+      */
+
       box.innerHTML = `
 
         <div class="fact-category">
-          ${e(x.category || "")}
+          ${e(x.category || "DID YOU KNOW")}
         </div>
 
-        <h3>
-          ${e(x.title || "")}
+        <h3 class="fact-headline">
+          ${e(x.fact || x.title || "")}
         </h3>
-
-        <p class="fact-text">
-          ${e(x.fact || "")}
-        </p>
 
         ${
           x.source
             ? `
               <div class="fact-source">
-                Source: ${e(x.source)}
+                <span class="fact-source-label">Source:</span>
+                ${e(x.source)}
               </div>
             `
             : ""
@@ -1560,36 +1566,37 @@ fetch("/api/breaking")
 
       if (dots) {
 
-        dots.innerHTML =
-          facts
-            .slice(0, 8)
-            .map(
-              (_, i) => `
-                <button
-                  class="fact-dot ${
-                    i === factIndex
-                      ? "active"
-                      : ""
-                  }"
-                  aria-label="Fact ${i + 1}">
-                </button>
-              `
-            )
-            .join("");
+        const totalFacts =
+          Math.min(facts.length, 8);
 
-        dots
-          .querySelectorAll(".fact-dot")
-          .forEach((button, i) => {
+        const currentNumber =
+          Math.min(factIndex + 1, totalFacts);
 
-            button.onclick = () => {
+        const progress =
+          totalFacts > 0
+            ? (currentNumber / totalFacts) * 100
+            : 0;
 
-              factIndex = i;
+        dots.innerHTML = `
 
-              renderFact();
+          <div class="fact-progress">
 
-            };
+            <div class="fact-progress-track">
+              <div
+                class="fact-progress-fill"
+                style="width:${progress}%"
+              ></div>
+            </div>
 
-          });
+            <div class="fact-progress-count">
+              ${String(currentNumber).padStart(2, "0")}
+              /
+              ${String(totalFacts).padStart(2, "0")}
+            </div>
+
+          </div>
+
+        `;
 
       }
 
@@ -1610,7 +1617,6 @@ fetch("/api/breaking")
           "en-IN",
           {
             month: "long",
-            year: "numeric",
             timeZone: "Asia/Kolkata"
           }
         );
@@ -1619,7 +1625,7 @@ fetch("/api/breaking")
       if (monthTitle) {
 
         monthTitle.textContent =
-          monthName;
+          monthName + " Horoscope";
 
       }
 

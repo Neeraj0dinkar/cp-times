@@ -3273,3 +3273,144 @@ body:has(.article) .mast {
   }
 
 }
+
+/* ============================================================
+   PROFESSIONAL FUN FACTS CARD
+   ============================================================ */
+
+.fun-card {
+  overflow: hidden;
+}
+
+.fun-card .fact-wrap {
+  padding: 24px 20px 8px;
+}
+
+.fun-card .fact-category {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #fff1f2;
+  color: #d71920;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fun-card .fact-headline {
+  margin: 0;
+  color: #172033;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+
+.fun-card .fact-source {
+  margin-top: 20px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fun-card .fact-source-label {
+  color: #94a3b8;
+}
+
+.fun-card .fact-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px 18px;
+}
+
+.fun-card .fact-dots {
+  flex: 1;
+  min-width: 0;
+}
+
+.fun-card .fact-progress {
+  width: 100%;
+}
+
+.fun-card .fact-progress-track {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e5e7eb;
+}
+
+.fun-card .fact-progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: #d71920;
+  transition: width 0.3s ease;
+}
+
+.fun-card .fact-progress-count {
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.fun-card .icon-next {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid #d71920;
+  border-radius: 50%;
+  background: #fff;
+  color: #d71920;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fun-card .icon-next:hover {
+  background: #d71920;
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.fun-card .rail-head {
+  min-height: 64px;
+  padding: 0 18px;
+}
+
+.fun-card .rail-icon {
+  color: #d71920;
+}
+
+@media (max-width: 700px) {
+
+  .fun-card .fact-wrap {
+    padding: 20px 16px 6px;
+  }
+
+  .fun-card .fact-headline {
+    font-size: 21px;
+    line-height: 1.32;
+  }
+
+  .fun-card .fact-controls {
+    padding: 12px 16px 16px;
+  }
+
+  .fun-card .icon-next {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+}
