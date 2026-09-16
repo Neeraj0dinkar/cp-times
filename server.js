@@ -1751,9 +1751,7 @@ ${urls
 `;
 
 
-    res
-      .type("application/xml")
-      .send(xml);
+    res.type("application/xml").send(xml.trim());
   }
 );
 
