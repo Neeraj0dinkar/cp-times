@@ -325,7 +325,9 @@ const categorySlug = (x) =>
   String(x || "")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
+    // Preserve Unicode letters/marks/numbers so Hindi and other Indian-language
+    // article titles can be used as readable SEO URL slugs.
+    .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
