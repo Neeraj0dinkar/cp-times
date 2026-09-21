@@ -338,15 +338,19 @@ const categorySlug = (x) =>
 const articleUrlKey = (article) => {
   const stored = String(article?.slug || "").trim();
 
-  const storedIsUsable =
-    stored &&
-    stored !== "%20" &&
-    stored !== "-" &&
-    !/^-?\d+$/.test(stored) &&
-    /[a-zA-Z]/.test(stored);
+  // Treat legacy numeric/ID-like values as invalid SEO slugs.
+  // Examples: "100", "123-23", "-1789398183277", "id-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".
+  const looksLikeLegacyId =
+    !stored ||
+    stored === "%20" ||
+    stored === "-" ||
+    /^-?[0-9]+(?:-[0-9]+)*$/.test(stored) ||
+    /^id-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stored) ||
+    !/[a-zA-Z]/.test(stored);
 
-  if (storedIsUsable) {
-    return encodeURIComponent(categorySlug(stored));
+  if (!looksLikeLegacyId) {
+    const cleaned = categorySlug(stored);
+    if (cleaned) return encodeURIComponent(cleaned);
   }
 
   const generated = categorySlug(article?.title);
@@ -1922,6 +1926,12 @@ app.get(
     }
 
     const canonical = `${SITE_ORIGIN}/${categorySlug(article.category)}/${articleUrlKey(article)}`;
+
+    // Redirect legacy/non-canonical article URLs to the single SEO URL.
+    if (articleKey !== articleUrlKey(article)) {
+      return res.redirect(301, canonical);
+    }
+
     const description = String(article.excerpt || article.title || DEFAULT_DESCRIPTION).trim().slice(0, 160);
     const image = absoluteUrl(article.image_url || "/CP_Times_logo_New_transparent.png");
     const publishedAt = article.published_at || new Date().toISOString();
