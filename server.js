@@ -331,9 +331,24 @@ const categorySlug = (x) =>
     .replace(/^-|-$/g, "");
 
 // Build a safe URL slug for older articles whose database slug is blank/invalid.
+// Build a clean, SEO-friendly URL key for an article.
+// Older CP Times articles may have database slugs such as "-1789398183277",
+// "-" or "%20". Those are not useful search-friendly URLs, so we generate
+// a readable key from the article title instead.
 const articleUrlKey = (article) => {
   const stored = String(article?.slug || "").trim();
-  if (stored && stored !== "%20") return encodeURIComponent(stored);
+
+  const storedIsUsable =
+    stored &&
+    stored !== "%20" &&
+    stored !== "-" &&
+    !/^-?\d+$/.test(stored) &&
+    /[a-zA-Z]/.test(stored);
+
+  if (storedIsUsable) {
+    return encodeURIComponent(categorySlug(stored));
+  }
+
   const generated = categorySlug(article?.title);
   return generated || `id-${article?.id || "unknown"}`;
 };
@@ -1948,7 +1963,7 @@ app.get(
 
     res.send(`
 <!doctype html>
-<html lang="hi-IN">
+<html lang="en-IN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
