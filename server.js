@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const OpenAI = require("openai");
 
 const openai = process.env.OPENAI_API_KEY
@@ -123,6 +124,167 @@ const otpLimiter = rateLimit({
 
 const PUB = path.join(__dirname, "public");
 
+const SITE_ORIGIN = SITE.replace(/\/$/, "");
+const DEFAULT_DESCRIPTION = "CP Times brings fast, factual news from India, Uttar Pradesh and around the world, covering business, technology, sports, entertainment and politics.";
+const CATEGORY_META = {
+  india: { name: "India", title: "India News | Latest India News | CP Times", description: "Latest India news, breaking news, national updates, politics, business and major developments from across India." },
+  "uttar-pradesh": { name: "Uttar Pradesh", title: "Uttar Pradesh News | Latest UP News | CP Times", description: "Latest Uttar Pradesh news, breaking updates, politics, cities, government, crime, business and major developments." },
+  world: { name: "World", title: "World News | Latest International News | CP Times", description: "Latest world news, international developments, global politics, major events and breaking news from around the world." },
+  business: { name: "Business", title: "Business News | Markets, Economy & Companies | CP Times", description: "Latest business news, markets, economy, companies, finance, startups and major corporate developments." },
+  technology: { name: "Technology", title: "Technology News | Latest Tech Updates | CP Times", description: "Latest technology news, AI, gadgets, software, cybersecurity, startups and major technology developments." },
+  sports: { name: "Sports", title: "Sports News | Latest Sports Updates | CP Times", description: "Latest sports news, scores, results, cricket, football and major sporting events from India and around the world." },
+  entertainment: { name: "Entertainment", title: "Entertainment News | Movies, TV & Celebrities | CP Times", description: "Latest entertainment news, movies, television, music, celebrity updates and major happenings from India and beyond." },
+  politics: { name: "Politics", title: "Politics News | Latest Political Updates | CP Times", description: "Latest politics news, government updates, elections, policy developments and political news from India and around the world." }
+};
+
+const getCategoryMeta = (slug) => CATEGORY_META[String(slug || "").toLowerCase()] || {
+  name: String(slug || "News").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+  title: `${String(slug || "News").replace(/-/g, " ")} News | CP Times`,
+  description: `Latest ${String(slug || "news").replace(/-/g, " ")} news, breaking updates and top stories from CP Times.`
+};
+
+const absoluteUrl = (url) => {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  return `${SITE_ORIGIN}/${value.replace(/^\/+/, "")}`;
+};
+
+// ------------------------------------------------------------
+// SEO / CRAWLER ENTRY POINTS
+// ------------------------------------------------------------
+
+// Always serve a deterministic robots.txt from the Node app. This prevents
+// accidental differences between the repository root robots.txt and the
+// public/robots.txt file and gives crawlers one canonical response.
+app.get("/robots.txt", (req, res) => {
+  res.type("text/plain").send(
+`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /reporter-register
+Sitemap: ${SITE_ORIGIN}/sitemap.xml
+`
+  );
+});
+
+const injectHomepageSeo = (html) => {
+  const canonical = `${SITE_ORIGIN}/`;
+  const title = "CP Times | Latest India News, Breaking News & Top Stories";
+  const description = DEFAULT_DESCRIPTION;
+  const logo = absoluteUrl("/CP_Times_logo_New_transparent.png");
+
+  const websiteLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CP Times",
+    "url": canonical,
+    "description": description,
+    "inLanguage": "en-IN",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CP Times",
+      "url": canonical,
+      "logo": { "@type": "ImageObject", "url": logo }
+    }
+  };
+
+  const organizationLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsMediaOrganization",
+    "name": "CP Times",
+    "url": canonical,
+    "logo": { "@type": "ImageObject", "url": logo }
+  };
+
+  const seoHead = `
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(description)}">
+<link rel="canonical" href="${esc(canonical)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CP Times">
+<meta property="og:locale" content="en_IN">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta property="og:url" content="${esc(canonical)}">
+<meta property="og:image" content="${esc(logo)}">
+<meta property="og:image:alt" content="CP Times logo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(logo)}">
+<link rel="icon" href="/CP_Times_logo_New_transparent.png">
+<script type="application/ld+json">${JSON.stringify(websiteLd).replace(/</g, "\\u003c")}</script>
+<script type="application/ld+json">${JSON.stringify(organizationLd).replace(/</g, "\\u003c")}</script>
+`;
+
+  if (!/<head>[\s\S]*?<\/head>/i.test(html)) return html;
+
+  // Preserve the existing homepage CSS/scripts. Replace only the generic SEO
+  // tags and append the stronger SEO block before </head>.
+  let updated = html
+    .replace(/<title>[\s\S]*?<\/title>/i, "")
+    .replace(/<meta\s+name=["']description["'][^>]*>/i, "")
+    .replace(/<meta\s+name=["']robots["'][^>]*>/i, "")
+    .replace(/<link\s+rel=["']canonical["'][^>]*>/i, "")
+    .replace(/<meta\s+property=["']og:[^"']+["'][^>]*>/gi, "")
+    .replace(/<meta\s+name=["']twitter:[^"']+["'][^>]*>/gi, "")
+    .replace(/<link\s+rel=["']icon["'][^>]*>/gi, "");
+
+  return updated.replace(/<\/head>/i, `${seoHead}\n</head>`);
+};
+
+// Intercept the homepage before express.static so Google receives the SEO
+// metadata and structured data in the initial HTML response, not only after JS.
+app.get("/", (req, res) => {
+  try {
+    const indexFile = path.join(PUB, "index.html");
+    const html = fs.readFileSync(indexFile, "utf8");
+    res.type("html").send(injectHomepageSeo(html));
+  } catch (error) {
+    console.error("Homepage SEO rendering error:", error);
+    res.sendFile(path.join(PUB, "index.html"));
+  }
+});
+
+// The canonical homepage is /, not /index.html.
+app.get("/index.html", (req, res) => res.redirect(301, `${SITE_ORIGIN}/`));
+
+// Legacy URL redirects must run before express.static so old HTML/query URLs do not
+// remain as duplicate indexable versions of the canonical SEO URLs.
+app.get("/article.html", async (req, res) => {
+  const slug = String(req.query.slug || "").trim();
+  if (!slug) return res.redirect(301, `${SITE_ORIGIN}/`);
+
+  try {
+    if (sb) {
+      const { data } = await sb
+        .from("articles")
+        .select("slug,category")
+        .eq("status", "published")
+        .eq("slug", decodeURIComponent(slug))
+        .maybeSingle();
+
+      if (data) {
+        const category = categorySlug(data.category) || "india";
+        return res.redirect(301, `${SITE_ORIGIN}/${category}/${articleUrlKey(data)}`);
+      }
+    }
+  } catch (error) {
+    console.error("Legacy article redirect error:", error);
+  }
+
+  return res.redirect(301, `${SITE_ORIGIN}/`);
+});
+
+app.get("/category.html", (req, res) => {
+  const requested = String(req.query.name || "india").trim();
+  const slug = categorySlug(requested) || "india";
+  return res.redirect(301, `${SITE_ORIGIN}/category/${slug}`);
+});
+
 app.use(
   express.static(PUB, {
     etag: false,
@@ -132,6 +294,9 @@ app.use(
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
         res.setHeader("Pragma", "no-cache");
         res.setHeader("Expires", "0");
+      }
+      if (filePath.endsWith("admin.html") || filePath.endsWith("login.html") || filePath.endsWith("contributor-register.html") || filePath.endsWith("article.html") || filePath.endsWith("category.html")) {
+        res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
       }
     }
   })
@@ -1679,82 +1844,52 @@ app.get(
 
 
 // ============================================================
-// SITEMAP
+// SEO SITEMAP
 // ============================================================
 
-app.get(
-  "/sitemap.xml",
-  async (req, res) => {
+app.get("/sitemap.xml", async (req, res) => {
+  try {
+    const entries = [
+      { loc: SITE_ORIGIN, changefreq: "daily", priority: "1.0" },
+      ...Object.keys(CATEGORY_META).map(slug => ({
+        loc: `${SITE_ORIGIN}/category/${slug}`,
+        changefreq: "daily",
+        priority: "0.8"
+      }))
+    ];
 
-    let urls = [
-      SITE,
-      "india",
-      "uttar-pradesh",
-      "world",
-      "business",
-      "technology",
-      "sports",
-      "entertainment",
-      "politics"
-    ].map(
-      (item) =>
-        item === SITE
-          ? SITE
-          : `${SITE}/category/${item}`
-    );
-
-
-    if (adminSb) {
-
-      const {
-        data
-      } = await sb
+    if (sb) {
+      const { data, error } = await sb
         .from("articles")
-        .select(
-          "id,slug,category"
-        )
-        .eq(
-          "status",
-          "published"
-        )
+        .select("id,slug,title,category,published_at,updated_at")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
         .limit(5000);
 
-
-      (data || []).forEach(
-        (article) => {
-
-          urls.push(
-            `${SITE}/${categorySlug(
-              article.category
-            )}/${articleUrlKey(article)}`
-          );
-
-        }
-      );
+      if (!error) {
+        (data || []).forEach(article => {
+          const loc = `${SITE_ORIGIN}/${categorySlug(article.category)}/${articleUrlKey(article)}`;
+          entries.push({
+            loc,
+            lastmod: article.updated_at || article.published_at || undefined,
+            changefreq: "daily",
+            priority: "0.7"
+          });
+        });
+      }
     }
 
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries.map(item => `  <url><loc>${esc(item.loc)}</loc>${item.lastmod ? `<lastmod>${esc(new Date(item.lastmod).toISOString())}</lastmod>` : ""}<changefreq>${item.changefreq}</changefreq><priority>${item.priority}</priority></url>`).join("\n")}
+</urlset>`;
 
-    const xml = `
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
->
-${urls
-  .map(
-    (url) =>
-      `<url><loc>${esc(
-        url
-      )}</loc></url>`
-  )
-  .join("")}
-</urlset>
-`;
-
-
-    res.type("application/xml").send(xml.trim());
+    res.type("application/xml").send(xml);
+  } catch (error) {
+    console.error("Sitemap generation error:", error);
+    res.status(500).type("text/plain").send("Unable to generate sitemap.");
   }
-);
-
+});
 
 // ============================================================
 // SEO ARTICLE PAGE
@@ -1763,270 +1898,169 @@ ${urls
 app.get(
   /^\/(india|uttar-pradesh|world|business|technology|sports|entertainment|politics)\/([^/]+)$/,
   async (req, res) => {
-
-    // The regex has two unnamed capture groups: category (params[0]) and article key (params[1]).
-    // Using params[2] makes every SEO article lookup receive undefined and return 404.
     const category = String(req.params[0] || "").trim();
     const articleKey = String(req.params[1] || "").trim();
-
-    console.log("=================================");
-    console.log("ARTICLE PAGE REQUEST");
-    console.log("Category:", category);
-    console.log("Article Key:", articleKey);
-
     const article = await published(articleKey);
 
-    console.log(
-      "ARTICLE RESULT:",
-      article
-        ? {
-            id: article.id,
-            slug: article.slug,
-            status: article.status,
-            title: article.title
-          }
-        : null
-    );
-
-    console.log("=================================");
-
-
     if (!article) {
-      return res
-        .status(404)
-        .send(
-          "<h1>Article not found</h1>"
-        );
+      return res.status(404).send("<h1>Article not found</h1>");
     }
 
-
-    const canonical =
-      `${SITE}/${categorySlug(
-        article.category
-      )}/${articleUrlKey(article)}`;
-
+    const canonical = `${SITE_ORIGIN}/${categorySlug(article.category)}/${articleUrlKey(article)}`;
+    const description = String(article.excerpt || article.title || DEFAULT_DESCRIPTION).trim().slice(0, 160);
+    const image = absoluteUrl(article.image_url || "/CP_Times_logo_New_transparent.png");
+    const publishedAt = article.published_at || new Date().toISOString();
+    const modifiedAt = article.updated_at || publishedAt;
+    const authorName = article.author_name || "CP Times Desk";
+    const categoryMeta = getCategoryMeta(category);
 
     const ld = {
-      "@context":
-        "https://schema.org",
-
-      "@type":
-        "NewsArticle",
-
-      headline:
-        article.title,
-
-      description:
-        article.excerpt ||
-        article.title,
-
-      datePublished:
-        article.published_at,
-
-      dateModified:
-        article.updated_at ||
-        article.published_at,
-
-      author: {
-        "@type": "Person",
-        name:
-          article.author_name ||
-          "CP Times Desk"
-      },
-
-      publisher: {
-        "@type":
-          "Organization",
-
-        name:
-          "CP Times",
-
-        url: SITE
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "mainEntityOfPage": { "@type": "WebPage", "@id": canonical },
+      "headline": article.title,
+      "description": description,
+      "url": canonical,
+      "image": [image],
+      "thumbnailUrl": image,
+      "datePublished": publishedAt,
+      "dateModified": modifiedAt,
+      "articleSection": categoryMeta.name,
+      "inLanguage": "en-IN",
+      "author": { "@type": "Person", "name": authorName },
+      "publisher": {
+        "@type": "Organization",
+        "name": "CP Times",
+        "url": SITE_ORIGIN,
+        "logo": { "@type": "ImageObject", "url": absoluteUrl("/CP_Times_logo_New_transparent.png") }
       }
     };
 
+    const breadcrumb = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_ORIGIN },
+        { "@type": "ListItem", "position": 2, "name": categoryMeta.name, "item": `${SITE_ORIGIN}/category/${category}` },
+        { "@type": "ListItem", "position": 3, "name": article.title, "item": canonical }
+      ]
+    };
 
     res.send(`
 <!doctype html>
-
 <html lang="hi-IN">
-
 <head>
-
 <meta charset="utf-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1"
-/>
-
-<title>
-${esc(article.title)} | CP Times
-</title>
-
-<meta
-  name="description"
-  content="${esc(
-    article.excerpt ||
-      article.title
-  )}"
-/>
-
-<link
-  rel="canonical"
-  href="${esc(canonical)}"
-/>
-
-<meta
-  property="og:title"
-  content="${esc(
-    article.title
-  )}"
-/>
-
-<meta
-  property="og:description"
-  content="${esc(
-    article.excerpt ||
-      article.title
-  )}"
-/>
-
-${
-  article.image_url
-    ? `
-<meta
-  property="og:image"
-  content="${esc(
-    article.image_url
-  )}"
-/>
-`
-    : ""
-}
-
-<link
-  rel="stylesheet"
-  href="/styles.css"
-/>
-
-<script type="application/ld+json">
-${JSON.stringify(ld).replace(
-  /</g,
-  "\\u003c"
-)}
-</script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(article.title)} | CP Times</title>
+<meta name="description" content="${esc(description)}">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="${esc(canonical)}">
+<link rel="alternate" hreflang="en-IN" href="${esc(canonical)}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="CP Times">
+<meta property="og:locale" content="en_IN">
+<meta property="og:title" content="${esc(article.title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta property="og:url" content="${esc(canonical)}">
+<meta property="og:image" content="${esc(image)}">
+<meta property="og:image:alt" content="${esc(article.title)}">
+<meta property="article:section" content="${esc(categoryMeta.name)}">
+<meta property="article:published_time" content="${esc(publishedAt)}">
+<meta property="article:modified_time" content="${esc(modifiedAt)}">
+<meta property="article:author" content="${esc(authorName)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(article.title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(image)}">
+<link rel="icon" href="/CP_Times_logo_New_transparent.png">
+<link rel="stylesheet" href="/styles.css">
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>
+<script type="application/ld+json">${JSON.stringify(breadcrumb).replace(/</g, "\\u003c")}</script>
 </head>
-
 <body>
-
 <header class="mast">
-
-<a href="/">
-<img
-  src="/CP_Times_logo_New_transparent.png"
-  alt="CP Times"
-/>
-</a>
-
-<a href="/">
-Home
-</a>
-
+<a href="/" aria-label="CP Times home"><img src="/CP_Times_logo_New_transparent.png" alt="CP Times"></a>
+<a href="/">Home</a>
 </header>
-
-
 <main class="article">
-
-<span class="tag">
-${esc(article.category)}
-</span>
-
-<h1>
-${esc(article.title)}
-</h1>
-
-<p class="lead">
-${esc(
-  article.excerpt || ""
-)}
-</p>
-
-<div class="meta">
-
-By
-${esc(
-  article.author_name ||
-    "CP Times Desk"
-)}
-
-•
-
-${new Date(
-  article.published_at
-).toLocaleString(
-  "en-IN"
-)}
-
-</div>
-
-
-${
-  article.image_url
-    ? `
-<img
-  class="article-image"
-  src="${esc(
-    article.image_url
-  )}"
-  alt="${esc(
-    article.title
-  )}"
-/>
-`
-    : ""
-}
-
-
-<div class="article-body">
-
-${bodyHtml(
-  article.body
-)}
-
-</div>
-
+<nav aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/category/${esc(category)}">${esc(categoryMeta.name)}</a> › ${esc(article.title)}</nav>
+<span class="tag">${esc(article.category)}</span>
+<h1>${esc(article.title)}</h1>
+<p class="lead">${esc(article.excerpt || "")}</p>
+<div class="meta">By ${esc(authorName)} • ${new Date(publishedAt).toLocaleString("en-IN")}</div>
+${article.image_url ? `<img class="article-image" src="${esc(article.image_url)}" alt="${esc(article.title)}" loading="eager">` : ""}
+<div class="article-body">${bodyHtml(article.body)}</div>
 </main>
-
 </body>
-
-</html>
-`);
+</html>`);
   }
 );
 
+// ============================================================
+// SEO CATEGORY PAGE
+// ============================================================
+
+app.get("/category/:category", (req, res) => {
+  const slug = categorySlug(req.params.category);
+  const meta = getCategoryMeta(slug);
+  const categoryFile = path.join(PUB, "category.html");
+
+  try {
+    let html = fs.readFileSync(categoryFile, "utf8");
+    const head = `
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(meta.title)}</title>
+<meta name="description" content="${esc(meta.description)}">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="${esc(`${SITE_ORIGIN}/category/${slug}`)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CP Times">
+<meta property="og:title" content="${esc(meta.title)}">
+<meta property="og:description" content="${esc(meta.description)}">
+<meta property="og:url" content="${esc(`${SITE_ORIGIN}/category/${slug}`)}">
+<meta property="og:image" content="${esc(absoluteUrl("/CP_Times_logo_New_transparent.png"))}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${esc(meta.title)}">
+<meta name="twitter:description" content="${esc(meta.description)}">
+<link rel="icon" href="/CP_Times_logo_New_transparent.png">
+<link rel="stylesheet" href="/styles.css">
+<script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": `${meta.name} News`,
+      "description": meta.description,
+      "url": `${SITE_ORIGIN}/category/${slug}`,
+      "isPartOf": { "@type": "WebSite", "name": "CP Times", "url": SITE_ORIGIN }
+    }).replace(/</g, "\\u003c")}</script>
+<script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_ORIGIN },
+        { "@type": "ListItem", "position": 2, "name": `${meta.name} News`, "item": `${SITE_ORIGIN}/category/${slug}` }
+      ]
+    }).replace(/</g, "\\u003c")}</script>
+</head>`;
+    html = html.replace(/<head>[\s\S]*?<\/head>/i, head);
+    html = html.replace(/<html(?:\s[^>]*)?>/i, `<html lang="en-IN">`);
+    res.send(html);
+  } catch (error) {
+    console.error("Category page error:", error);
+    res.status(500).send("Unable to load category page.");
+  }
+});
 
 // ============================================================
 // WEBSITE ROUTES
 // ============================================================
 
 app.get(
-  "/category/:category",
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        PUB,
-        "category.html"
-      )
-    );
-  }
-);
-
-
-app.get(
   "/admin",
   (req, res) => {
+    res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
@@ -2038,6 +2072,7 @@ app.get(
 app.get(
   "/login",
   (req, res) => {
+    res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.sendFile(
       path.join(
         PUB,
@@ -2052,6 +2087,7 @@ app.get(
 app.get(
   "/reporter-register",
   (req, res) => {
+    res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");

@@ -1,4 +1,28 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>CP Times Category</title><link rel="stylesheet" href="/styles.css"></head><body><header class="mast"><a href="/"><img src="/CP_Times_logo_New_transparent.png" alt="CP Times"></a></header><main class="container" style="padding:30px 0"><h1 id="h">News</h1><div id="l" class="news-list"></div></main><script>
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CP Times Category</title>
+  <meta name="description" content="Latest news from CP Times.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://cptimes.in/category/india">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="mast">
+  <a href="/" aria-label="CP Times home">
+    <img src="/CP_Times_logo_New_transparent.png" alt="CP Times">
+  </a>
+</header>
+<main class="container" style="padding:30px 0">
+  <nav aria-label="Breadcrumb" style="margin-bottom:12px">
+    <a href="/">Home</a> › <span id="breadcrumbCategory">News</span>
+  </nav>
+  <h1 id="h">News</h1>
+  <div id="l" class="news-list"></div>
+</main>
+<script>
 const categoryMap = {
   "india": "India",
   "uttar-pradesh": "Uttar Pradesh",
@@ -10,86 +34,53 @@ const categoryMap = {
   "politics": "Politics"
 };
 
-const categorySlug =
-  location.pathname.split("/")[2] || "india";
+const categorySlug = location.pathname.split("/")[2] || "india";
+const categoryName = categoryMap[categorySlug] || categorySlug.replace(/-/g, " ").replace(/\b\w/g, char => char.toUpperCase());
+const metaTitle = `${categoryName} News | Latest ${categoryName === "Uttar Pradesh" ? "UP" : categoryName} News | CP Times`;
+const metaDescription = `Latest ${categoryName} news, breaking updates, top stories and major developments from CP Times.`;
+const canonical = `${location.origin}/category/${encodeURIComponent(categorySlug)}`;
 
-const categoryName =
-  categoryMap[categorySlug] ||
-  categorySlug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, char => char.toUpperCase());
-
-h.textContent =
-  `${categoryName} News`;
+document.title = metaTitle;
+document.querySelector('meta[name="description"]').setAttribute("content", metaDescription);
+document.querySelector('meta[name="robots"]').setAttribute("content", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
+document.querySelector('link[rel="canonical"]').setAttribute("href", canonical);
+document.getElementById("h").textContent = `${categoryName} News`;
+document.getElementById("breadcrumbCategory").textContent = `${categoryName} News`;
 
 const articleUrlKey = x => {
-
-  const v =
-    String(x && x.slug || "").trim();
-
-  return v && v !== "%20"
-    ? encodeURIComponent(v)
-    : `id-${x.id}`;
-
+  const v = String(x && x.slug || "").trim();
+  return v && v !== "%20" ? encodeURIComponent(v) : `id-${x.id}`;
 };
 
-const categoryUrlSlug = category => {
+const categoryUrlSlug = category => String(category || "")
+  .trim().toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-");
 
-  return String(category || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+const escapeHtml = value => String(value ?? "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#039;");
 
-};
-
-fetch(
-  "/api/articles?category=" +
-  encodeURIComponent(categoryName)
-)
-  .then(r => r.json())
+fetch("/api/articles?category=" + encodeURIComponent(categoryName))
+  .then(r => r.ok ? r.json() : [])
   .then(a => {
-
-    l.innerHTML =
-      (a || [])
-        .map(x => `
-
-          <article class="card">
-
-            <a
-              href="/${categoryUrlSlug(x.category)}/${articleUrlKey(x)}"
-            >
-
-              <img
-                class="thumb"
-                src="${x.image_url || "/fallback-news.svg"}"
-              />
-
-            </a>
-
-            <span class="tag">
-              ${x.category}
-            </span>
-
-            <h3>
-
-              <a
-                href="/${categoryUrlSlug(x.category)}/${articleUrlKey(x)}"
-              >
-                ${x.title}
-              </a>
-
-            </h3>
-
-            <p>
-              ${x.excerpt || ""}
-            </p>
-
-          </article>
-
-        `)
-        .join("") ||
-      "<p>No stories yet.</p>";
-
+    document.getElementById("l").innerHTML = (a || []).map(x => `
+      <article class="card">
+        <a href="/${categoryUrlSlug(x.category)}/${articleUrlKey(x)}" aria-label="Read ${escapeHtml(x.title)}">
+          <img class="thumb" src="${escapeHtml(x.image_url || "/fallback-news.svg")}" alt="${escapeHtml(x.title)}" loading="lazy">
+        </a>
+        <span class="tag">${escapeHtml(x.category)}</span>
+        <h2>
+          <a href="/${categoryUrlSlug(x.category)}/${articleUrlKey(x)}">${escapeHtml(x.title)}</a>
+        </h2>
+        <p>${escapeHtml(x.excerpt || "")}</p>
+      </article>
+    `).join("") || "<p>No stories yet.</p>";
+  })
+  .catch(() => {
+    document.getElementById("l").innerHTML = "<p>Unable to load stories right now.</p>";
   });
 </script>
-</body></html>
+</body>
+</html>
